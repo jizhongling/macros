@@ -41,7 +41,7 @@ int Fun4All_G4_sPHENIX(
     const string &outdir = ".")
 {
   Fun4AllServer *se = Fun4AllServer::instance();
-  se->Verbosity(0);
+  se->Verbosity(10);
 
   //Opt to print all random seed used for debugging reproducibility. Comment out to reduce stdout prints.
   PHRandomSeed::Verbosity(1);
@@ -106,7 +106,7 @@ int Fun4All_G4_sPHENIX(
   //Input::UPSILON_NUMBER = 3; // if you need 3 of them
   //Input::UPSILON_VERBOSITY = 0;
 
-  //  Input::HEPMC = true;
+  Input::HEPMC = true;
   INPUTHEPMC::filename = inputFile;
 
   // Event pile up simulation with collision rate in Hz MB collisions.
@@ -128,7 +128,8 @@ int Fun4All_G4_sPHENIX(
   // add the settings for other with [1], next with [2]...
   if (Input::SIMPLE)
   {
-    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi-", 5);
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi-", 50);
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi+", 50);
     if (Input::HEPMC || Input::EMBED)
     {
       INPUTGENERATOR::SimpleEventGenerator[0]->set_reuse_existing_vertex(true);
@@ -227,7 +228,7 @@ int Fun4All_G4_sPHENIX(
   // Write the DST
   //======================
 
-  //Enable::DSTOUT = true;
+  Enable::DSTOUT = true;
   Enable::DSTOUT_COMPRESS = false;
   DstOut::OutputDir = outdir;
   DstOut::OutputFile = outputFile;
@@ -243,7 +244,7 @@ int Fun4All_G4_sPHENIX(
   //======================
 
   // QA, main switch
-  Enable::QA = true;
+  Enable::QA = false;
 
   // Global options (enabled for all enables subsystems - if implemented)
   //  Enable::ABSORBER = true;
@@ -260,33 +261,33 @@ int Fun4All_G4_sPHENIX(
   // central tracking
   Enable::MVTX = true;
   Enable::MVTX_CELL = Enable::MVTX && true;
-  Enable::MVTX_CLUSTER = Enable::MVTX_CELL && true;
+  Enable::MVTX_CLUSTER = Enable::MVTX_CELL && false;
   Enable::MVTX_QA = Enable::MVTX_CLUSTER and Enable::QA && true;
 
   Enable::INTT = true;
   Enable::INTT_CELL = Enable::INTT && true;
-  Enable::INTT_CLUSTER = Enable::INTT_CELL && true;
+  Enable::INTT_CLUSTER = Enable::INTT_CELL && false;
   Enable::INTT_QA = Enable::INTT_CLUSTER and Enable::QA && true;
 
   Enable::TPC = true;
   Enable::TPC_ABSORBER = true;
   Enable::TPC_CELL = Enable::TPC && true;
-  Enable::TPC_CLUSTER = Enable::TPC_CELL && true;
+  Enable::TPC_CLUSTER = Enable::TPC_CELL && false;
   Enable::TPC_QA = Enable::TPC_CLUSTER and Enable::QA && true;
 
-  //Enable::MICROMEGAS = true;
+  Enable::MICROMEGAS = true;
   Enable::MICROMEGAS_CELL = Enable::MICROMEGAS && true;
-  Enable::MICROMEGAS_CLUSTER = Enable::MICROMEGAS_CELL && true;
+  Enable::MICROMEGAS_CLUSTER = Enable::MICROMEGAS_CELL && false;
 
-  Enable::TRACKING_TRACK = true;
-  Enable::TRACKING_EVAL = Enable::TRACKING_TRACK && true;
-  Enable::TRACKING_QA = Enable::TRACKING_TRACK and Enable::QA && true;
+  Enable::TRACKING_TRACK = false;
+  Enable::TRACKING_EVAL = Enable::TRACKING_TRACK && false;
+  Enable::TRACKING_QA = Enable::TRACKING_TRACK and Enable::QA && false;
 
   //  cemc electronics + thin layer of W-epoxy to get albedo from cemc
   //  into the tracking, cannot run together with CEMC
   //  Enable::CEMCALBEDO = true;
 
-  Enable::CEMC = true;
+  Enable::CEMC = false;
   Enable::CEMC_ABSORBER = true;
   Enable::CEMC_CELL = Enable::CEMC && true;
   Enable::CEMC_TOWER = Enable::CEMC_CELL && true;
@@ -294,7 +295,7 @@ int Fun4All_G4_sPHENIX(
   Enable::CEMC_EVAL = Enable::CEMC_CLUSTER && true;
   Enable::CEMC_QA = Enable::CEMC_CLUSTER and Enable::QA && true;
 
-  Enable::HCALIN = true;
+  Enable::HCALIN = false;
   Enable::HCALIN_ABSORBER = true;
   Enable::HCALIN_CELL = Enable::HCALIN && true;
   Enable::HCALIN_TOWER = Enable::HCALIN_CELL && true;
@@ -305,7 +306,7 @@ int Fun4All_G4_sPHENIX(
   Enable::MAGNET = true;
   Enable::MAGNET_ABSORBER = true;
 
-  Enable::HCALOUT = true;
+  Enable::HCALOUT = false;
   Enable::HCALOUT_ABSORBER = true;
   Enable::HCALOUT_CELL = Enable::HCALOUT && true;
   Enable::HCALOUT_TOWER = Enable::HCALOUT_CELL && true;
@@ -313,7 +314,7 @@ int Fun4All_G4_sPHENIX(
   Enable::HCALOUT_EVAL = Enable::HCALOUT_CLUSTER && true;
   Enable::HCALOUT_QA = Enable::HCALOUT_CLUSTER and Enable::QA && true;
 
-  Enable::EPD = true;
+  Enable::EPD = false;
 
 
   Enable::BEAMLINE = true;
@@ -338,7 +339,7 @@ int Fun4All_G4_sPHENIX(
 
   Enable::CALOTRIGGER = Enable::CEMC_TOWER && Enable::HCALIN_TOWER && Enable::HCALOUT_TOWER && false;
 
-  Enable::JETS = true;
+  Enable::JETS = false;
   Enable::JETS_EVAL = Enable::JETS && true;
   Enable::JETS_QA = Enable::JETS and Enable::QA && true;
 
@@ -599,6 +600,7 @@ int Fun4All_G4_sPHENIX(
   //-----
 
   se->End();
+  se->PrintTimer();
   std::cout << "All done" << std::endl;
   delete se;
   if (Enable::PRODUCTION)
