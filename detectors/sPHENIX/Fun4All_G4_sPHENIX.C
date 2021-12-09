@@ -7,12 +7,13 @@
 #include <G4Setup_sPHENIX.C>
 #include <G4_Bbc.C>
 #include <G4_CaloTrigger.C>
+#include <G4_Centrality.C>
 #include <G4_DSTReader.C>
 #include <G4_Global.C>
 #include <G4_HIJetReco.C>
 #include <G4_Input.C>
 #include <G4_Jets.C>
-#include <G4_KFParticle.C>
+//#include <G4_KFParticle.C>
 #include <G4_ParticleFlow.C>
 #include <G4_Production.C>
 #include <G4_TopoClusterReco.C>
@@ -237,7 +238,7 @@ int Fun4All_G4_sPHENIX(
   //  Enable::DSTREADER = true;
 
   // turn the display on (default off)
-  Enable::DISPLAY = false;
+  // Enable::DISPLAY = true;
 
   //======================
   // What to run
@@ -263,6 +264,7 @@ int Fun4All_G4_sPHENIX(
   Enable::MVTX_CELL = Enable::MVTX && true;
   Enable::MVTX_CLUSTER = Enable::MVTX_CELL && false;
   Enable::MVTX_QA = Enable::MVTX_CLUSTER and Enable::QA && true;
+  Enable::TrackingService = true;
 
   Enable::INTT = true;
   Enable::INTT_CELL = Enable::INTT && true;
@@ -316,7 +318,6 @@ int Fun4All_G4_sPHENIX(
 
   Enable::EPD = false;
 
-
   Enable::BEAMLINE = true;
 //  Enable::BEAMLINE_ABSORBER = true;  // makes the beam line magnets sensitive volumes
 //  Enable::BEAMLINE_BLACKHOLE = true; // turns the beamline magnets into black holes
@@ -352,6 +353,8 @@ int Fun4All_G4_sPHENIX(
   Enable::TOPOCLUSTER = false && Enable::CEMC_TOWER && Enable::HCALIN_TOWER && Enable::HCALOUT_TOWER;
   // particle flow jet reconstruction - needs topoClusters!
   Enable::PARTICLEFLOW = true && Enable::TOPOCLUSTER;
+  // centrality reconstruction
+  Enable::CENTRALITY = true;
 
   // new settings using Enable namespace in GlobalVariables.C
   Enable::BLACKHOLE = true;
@@ -466,6 +469,15 @@ int Fun4All_G4_sPHENIX(
   }
 
   //-----------------
+  // Centrality Determination
+  //-----------------
+
+  if (Enable::CENTRALITY)
+  {
+      Centrality();
+  }
+
+  //-----------------
   // Calo Trigger Simulation
   //-----------------
 
@@ -511,8 +523,8 @@ int Fun4All_G4_sPHENIX(
   //======================
   // Run KFParticle on evt
   //======================
-  if (Enable::KFPARTICLE && Input::UPSILON) KFParticle_Upsilon_Reco();
-  if (Enable::KFPARTICLE && Input::DZERO) KFParticle_D0_Reco();
+  //if (Enable::KFPARTICLE && Input::UPSILON) KFParticle_Upsilon_Reco();
+  //if (Enable::KFPARTICLE && Input::DZERO) KFParticle_D0_Reco();
   //if (Enable::KFPARTICLE && Input::LAMBDAC) KFParticle_Lambdac_Reco();
 
   //----------------------
