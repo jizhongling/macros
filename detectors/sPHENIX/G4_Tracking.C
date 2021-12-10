@@ -28,6 +28,7 @@ R__LOAD_LIBRARY(libqa_modules.so)
 #include <trackreco/PHSiliconTpcTrackMatching.h>
 #include <trackreco/PHSimpleKFProp.h>
 #include <trackreco/PHSimpleVertexFinder.h>
+#include <trackreco/PHTpcClusterMover.h>
 #include <trackreco/PHTpcDeltaZCorrection.h>
 #include <trackreco/PHTpcTrackSeedCircleFit.h>
 #include <trackreco/PHTrackCleaner.h>
@@ -37,7 +38,6 @@ R__LOAD_LIBRARY(libqa_modules.so)
 #include <trackreco/PHTruthVertexing.h>
 
 #include <tpccalib/PHTpcResiduals.h>
-#include <tpccalib/TpcSpaceChargeReconstruction.h>
 
 #include <qa_modules/QAG4SimulationTracking.h>
 #include <qa_modules/QAG4SimulationUpsilon.h>
@@ -56,7 +56,7 @@ namespace Enable
 namespace G4TRACKING
 {
   // Space Charge calibration flag
-  bool SC_CALIBMODE = true;                                            // this is anded with G4TPC::ENABLE_DISTORTIONS in TrackingInit()
+  bool SC_CALIBMODE = false;                                            // this is anded with G4TPC::ENABLE_DISTORTIONS in TrackingInit()
   bool SC_USE_MICROMEGAS = true;
   bool SC_SAVEHISTOGRAMS = false;
   double SC_COLLISIONRATE = 50e3;                                      // leave at 50 KHz for now, scaling of distortion map not implemented yet
@@ -90,9 +90,6 @@ void TrackingInit()
   {
     G4MICROMEGAS::n_micromegas_layer = 0;
   }
-
-  // SC_CALIBMODE makes no sense if distortions are not present
-  G4TRACKING::SC_CALIBMODE = (G4TPC::ENABLE_STATIC_DISTORTIONS || G4TPC::ENABLE_TIME_ORDERED_DISTORTIONS) && G4TRACKING::SC_CALIBMODE;
 
   /// Build the Acts geometry
   Fun4AllServer* se = Fun4AllServer::instance();
@@ -190,15 +187,22 @@ void Tracking_Reco()
     // Associate TPC track stubs with silicon and Micromegas
     //=============================================
 
-    PHTpcTrackSeedCircleFit* vtxassoc = new PHTpcTrackSeedCircleFit();
+    /*
+     * add cluster mover to apply TPC distortion corrections to clusters belonging to tracks
+     * once the correction is applied, the cluster are moved back to TPC surfaces using local track angles
+     * moved clusters are stored in a separate map, called CORRECTED_TRKR_CLUSTER
+     */
+    if( G4TPC::ENABLE_CORRECTIONS ) se->registerSubsystem(new PHTpcClusterMover);
+
+    auto vtxassoc = new PHTpcTrackSeedCircleFit;
     vtxassoc->Verbosity(verbosity);
     se->registerSubsystem(vtxassoc);
 
     // Choose the best duplicate TPC track seed
-    PHGhostRejection* ghosts = new PHGhostRejection();
+    auto ghosts = new PHGhostRejection;
     ghosts->Verbosity(verbosity);
     se->registerSubsystem(ghosts);
-
+      
     // correct for particle propagation in TPC
     se->registerSubsystem(new PHTpcDeltaZCorrection);
 
@@ -340,6 +344,13 @@ void Tracking_Reco()
     pat_rec->set_track_map_name("SvtxTrackMap");
     se->registerSubsystem(pat_rec);
 
+    /*
+     * add cluster mover to apply TPC distortion corrections to clusters belonging to tracks
+     * once the correction is applied, the cluster are moved back to TPC surfaces using local track angles
+     * moved clusters are stored in a separate map, called CORRECTED_TRKR_CLUSTER
+     */
+    if( G4TPC::ENABLE_CORRECTIONS ) se->registerSubsystem(new PHTpcClusterMover);
+    
     // correct for particle propagation in TPC
     se->registerSubsystem(new PHTpcDeltaZCorrection);
 
@@ -433,15 +444,14 @@ void Tracking_Eval(const std::string& outputfile)
                            G4TPC::n_gas_layer,
                            G4MICROMEGAS::n_micromegas_layer);
   eval->do_cluster_eval(true);
-  eval->do_g4hit_eval(false);// <= takes a lot of time if set to true, not relevant for cluster studies right now
-  eval->do_g4cluster_eval(false); // leave that for later, current implementation doesn't work well for high occupancy'
+  eval->do_g4hit_eval(false);  // <= takes a lot of time if set to true, not relevant for cluster studies right now
+  eval->do_g4cluster_eval(false);  // leave that for later, current implementation doesn't work well for high occupancy'
   eval->do_hit_eval(true);  // enable to see the hits that includes the chamber physics, this is the inout on which the cluster finder runs
   eval->do_gpoint_eval(false);
   eval->do_vtx_eval_light(true);
   eval->do_eval_light(true);
   eval->set_use_initial_vertex(G4TRACKING::g4eval_use_initial_vertex);
-  eval->set_use_genfit_vertex(false);
-  eval->scan_for_embedded(false);   // take all tracks if false - take only embedded tracks if true
+  eval->scan_for_embedded(false);  // take all tracks if false - take only embedded tracks if true
   //IMPORTANT Set scan_for_embed to false to get all hits in the TPC
   eval->scan_for_primaries(true);  // defaults to only thrown particles for ntp_gtrack
   eval->Verbosity(verbosity);
