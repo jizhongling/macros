@@ -18,29 +18,28 @@ R__LOAD_LIBRARY(libfun4all.so)
 R__LOAD_LIBRARY(libg4eval.so)
 R__LOAD_LIBRARY(libcentrality_io.so)
 
-void ReadHitFile(const int nJob = 0)
+void ReadHitFile(const int nJob = 0, const int nEvents = 1)
 {
-  const int nEvents = 1;
   const int nOff = 1000+nJob;
 
-  //const string &embed_input_str1 = "/phenix/u/bogui/data/MacrosAug21/macros/detectors/sPHENIX/Aug21Hits/SvtxAug21_HitsPu50_020_1_";
-  //char num_field[500];
-  //sprintf(num_field,"%04d.root", nOff);
-  //string numin = num_field;
-  //string embed_infile1 = embed_input_str1+numin;
+  const string &embed_input_str1 = "/phenix/u/bogui/data/MacrosAug21/macros/detectors/sPHENIX/Aug21Hits/SvtxAug21_HitsPu50_020_1_";
+  char num_field[500];
+  sprintf(num_field,"%04d.root", nOff);
+  string numin = num_field;
+  string embed_infile1 = embed_input_str1+numin;
 
-  const string &inputFile = Form("output/G4sPHENIX%d.root",nJob);
+  const string &inputFile = Form("/phenix/spin/phnxsp01/zji/data/sphenix/output/G4sPHENIX%d.root",nJob);
   std::cout << "input file: " << inputFile << endl;
 
   //const string &outputFile = Form("Aug21Hits/EvalHitsPu50_020_%d.root",nOff);
-  const string &outputFile = Form("histos/G4sPHENIX_g4svtx_eval%d.root",nJob);
+  const string &outputFile = Form("/phenix/spin/phnxsp01/zji/data/sphenix/output/G4sPHENIX_g4svtx_eval%d.root",nJob);
 
   recoConsts *rc = recoConsts::instance();
   rc->set_IntFlag("RANDOMSEED", nJob);
   rc->set_IntFlag("RUNNUMBER", 0);
 
   Fun4AllServer *se = Fun4AllServer::instance();
-  se->Verbosity(10);
+  se->Verbosity(0);
 
   MagnetInit(); // initialize fieldmap name
   TrackingInit();  // initialize tracking
@@ -93,7 +92,7 @@ void ReadHitFile(const int nJob = 0)
   Fun4AllInputManager *in = new Fun4AllDstInputManager("DSTin");
 
   //TString tstr_input(embed_infile1);
-  //in->AddFile(embed_infile1);
+  in->AddFile(embed_infile1);
   TString tstr_input(inputFile);
   if (tstr_input.EndsWith(".root"))
     in->AddFile(inputFile);
@@ -106,7 +105,7 @@ void ReadHitFile(const int nJob = 0)
   std::cout << " Done Run, ending... " << std::endl;
   se->End();
 
-  se->PrintTimer();
+  //se->PrintTimer();
 
   std::cout << " Success!! " << std::endl;
   // deleting the server shows if the memory is corrupted, if the job dies here - it is

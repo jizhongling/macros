@@ -40,10 +40,10 @@ int Fun4All_G4_sPHENIX(
     const string &outputFile = "G4sPHENIX.root",
     const string &embed_input_file = "https://www.phenix.bnl.gov/WWW/publish/phnxbld/sPHENIX/files/sPHENIX_G4Hits_sHijing_9-11fm_00000_00010.root",
     const int skip = 0,
-    const string &outdir = "output")
+    const string &outdir = "/phenix/spin/phnxsp01/zji/data/sphenix/output")
 {
   Fun4AllServer *se = Fun4AllServer::instance();
-  se->Verbosity(10);
+  se->Verbosity(0);
 
   //Opt to print all random seed used for debugging reproducibility. Comment out to reduce stdout prints.
   PHRandomSeed::Verbosity(1);
@@ -616,7 +616,7 @@ int Fun4All_G4_sPHENIX(
   //-----
 
   se->End();
-  se->PrintTimer();
+  //se->PrintTimer();
   std::cout << "All done" << std::endl;
   delete se;
   if (Enable::PRODUCTION)
