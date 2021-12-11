@@ -34,12 +34,13 @@ R__LOAD_LIBRARY(libfun4all.so)
 // try inputFile = /sphenix/sim/sim01/sphnxpro/sHijing_HepMC/sHijing_0-12fm.dat
 
 int Fun4All_G4_sPHENIX(
+    const int nJob = 0,
     const int nEvents = 1,
     const string &inputFile = "https://www.phenix.bnl.gov/WWW/publish/phnxbld/sPHENIX/files/sPHENIX_G4Hits_sHijing_9-11fm_00000_00010.root",
     const string &outputFile = "G4sPHENIX.root",
     const string &embed_input_file = "https://www.phenix.bnl.gov/WWW/publish/phnxbld/sPHENIX/files/sPHENIX_G4Hits_sHijing_9-11fm_00000_00010.root",
     const int skip = 0,
-    const string &outdir = ".")
+    const string &outdir = "output")
 {
   Fun4AllServer *se = Fun4AllServer::instance();
   se->Verbosity(10);
@@ -58,6 +59,7 @@ int Fun4All_G4_sPHENIX(
   //  rc->set_IntFlag("RANDOMSEED",PHRandomSeed());
   // or set it to a fixed value so you can debug your code
   //  rc->set_IntFlag("RANDOMSEED", 12345);
+  rc->set_IntFlag("RUNNUMBER", 0);
 
   //===============
   // Input options
@@ -107,7 +109,7 @@ int Fun4All_G4_sPHENIX(
   //Input::UPSILON_NUMBER = 3; // if you need 3 of them
   //Input::UPSILON_VERBOSITY = 0;
 
-  Input::HEPMC = true;
+  //  Input::HEPMC = true;
   INPUTHEPMC::filename = inputFile;
 
   // Event pile up simulation with collision rate in Hz MB collisions.
@@ -232,7 +234,7 @@ int Fun4All_G4_sPHENIX(
   Enable::DSTOUT = true;
   Enable::DSTOUT_COMPRESS = false;
   DstOut::OutputDir = outdir;
-  DstOut::OutputFile = outputFile;
+  //DstOut::OutputFile = outputFile;
 
   //Option to convert DST to human command readable TTree for quick poke around the outputs
   //  Enable::DSTREADER = true;
@@ -505,6 +507,8 @@ int Fun4All_G4_sPHENIX(
   {
     outputroot.erase(pos, remove_this.length());
   }
+
+  DstOut::OutputFile = outputroot + nJob + ".root";
 
   if (Enable::TRACKING_EVAL) Tracking_Eval(outputroot + "_g4svtx_eval.root");
 
