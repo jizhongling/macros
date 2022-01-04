@@ -13,7 +13,7 @@
 #include <G4_HIJetReco.C>
 #include <G4_Input.C>
 #include <G4_Jets.C>
-//#include <G4_KFParticle.C>
+#include <G4_KFParticle.C>
 #include <G4_ParticleFlow.C>
 #include <G4_Production.C>
 #include <G4_TopoClusterReco.C>
@@ -60,6 +60,15 @@ int Fun4All_G4_sPHENIX(
   // or set it to a fixed value so you can debug your code
   //  rc->set_IntFlag("RANDOMSEED", 12345);
   rc->set_IntFlag("RUNNUMBER", 0);
+
+  //===============
+  // conditions DB flags
+  //===============
+  // tag
+  rc->set_StringFlag("XPLOAD_TAG","example_tag_1");
+  // database
+  rc->set_StringFlag("XPLOAD_CONFIG","test");
+
 
   //===============
   // Input options
@@ -240,7 +249,7 @@ int Fun4All_G4_sPHENIX(
   //  Enable::DSTREADER = true;
 
   // turn the display on (default off)
-  // Enable::DISPLAY = true;
+   //Enable::DISPLAY = true;
 
   //======================
   // What to run
@@ -282,6 +291,7 @@ int Fun4All_G4_sPHENIX(
   Enable::MICROMEGAS = true;
   Enable::MICROMEGAS_CELL = Enable::MICROMEGAS && true;
   Enable::MICROMEGAS_CLUSTER = Enable::MICROMEGAS_CELL && false;
+  Enable::MICROMEGAS_QA = Enable::MICROMEGAS_CLUSTER && Enable::QA && true;
 
   Enable::TRACKING_TRACK = false;
   Enable::TRACKING_EVAL = Enable::TRACKING_TRACK && false;
@@ -376,8 +386,8 @@ int Fun4All_G4_sPHENIX(
   // Magnet Settings
   //---------------
 
-  //  const string magfield = "1.5"; // alternatively to specify a constant magnetic field, give a float number, which will be translated to solenoidal field in T, if string use as fieldmap name (including path)
   //  G4MAGNET::magfield =  string(getenv("CALIBRATIONROOT"))+ string("/Field/Map/sphenix3dbigmapxyz.root");  // default map from the calibration database
+  //  G4MAGNET::magfield = "1.5"; // alternatively to specify a constant magnetic field, give a float number, which will be translated to solenoidal field in T, if string use as fieldmap name (including path)
   G4MAGNET::magfield_rescale = 1.;  // make consistent with expected Babar field strength of 1.4T
 
   //---------------
@@ -527,9 +537,8 @@ int Fun4All_G4_sPHENIX(
   //======================
   // Run KFParticle on evt
   //======================
-  //if (Enable::KFPARTICLE && Input::UPSILON) KFParticle_Upsilon_Reco();
-  //if (Enable::KFPARTICLE && Input::DZERO) KFParticle_D0_Reco();
-  //if (Enable::KFPARTICLE && Input::LAMBDAC) KFParticle_Lambdac_Reco();
+  if (Enable::KFPARTICLE && Input::UPSILON) KFParticle_Upsilon_Reco();
+  if (Enable::KFPARTICLE && Input::DZERO) KFParticle_D0_Reco();
 
   //----------------------
   // Standard QAs
@@ -544,6 +553,7 @@ int Fun4All_G4_sPHENIX(
   if (Enable::MVTX_QA) Mvtx_QA();
   if (Enable::INTT_QA) Intt_QA();
   if (Enable::TPC_QA) TPC_QA();
+  if (Enable::MICROMEGAS_QA) Micromegas_QA();
   if (Enable::TRACKING_QA) Tracking_QA();
 
   if (Enable::TRACKING_QA and Enable::CEMC_QA and Enable::HCALIN_QA and Enable::HCALOUT_QA) QA_G4CaloTracking();

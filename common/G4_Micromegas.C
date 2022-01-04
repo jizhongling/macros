@@ -14,6 +14,7 @@
 #include <g4main/PHG4Reco.h>
 
 #include <micromegas/MicromegasClusterizer.h>
+#include <qa_modules/QAG4SimulationMicromegas.h>
 
 #include <fun4all/Fun4AllServer.h>
 
@@ -25,6 +26,7 @@ namespace Enable
   bool MICROMEGAS = false;
   bool MICROMEGAS_CELL = false;
   bool MICROMEGAS_CLUSTER = false;
+  bool MICROMEGAS_QA = false;
 }  // namespace Enable
 
 namespace G4MICROMEGAS
@@ -70,6 +72,7 @@ void Micromegas(PHG4Reco* g4Reco)
 {
   const int mm_layer = G4MVTX::n_maps_layer + G4INTT::n_intt_layer + G4TPC::n_gas_layer;
   auto mm = new PHG4MicromegasSubsystem("MICROMEGAS", mm_layer);
+  mm->OverlapCheck( Enable::OVERLAPCHECK );
   mm->SetActive();
   mm->set_double_param("mm_length", 220);
   mm->set_double_param("mm_radius", G4MICROMEGAS::mm_radius);
@@ -182,4 +185,13 @@ void Micromegas_Clustering()
   auto se = Fun4AllServer::instance();
   se->registerSubsystem(new MicromegasClusterizer);
 }
+
+void Micromegas_QA()
+{
+  auto se = Fun4AllServer::instance();
+  auto qa = new QAG4SimulationMicromegas;
+  qa->Verbosity(Enable::QA_VERBOSITY);
+  se->registerSubsystem(qa);
+}
+
 #endif
