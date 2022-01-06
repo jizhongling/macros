@@ -33,10 +33,13 @@ R__LOAD_LIBRARY(libfun4all.so)
 // For HepMC Hijing
 // try inputFile = /sphenix/sim/sim01/sphnxpro/sHijing_HepMC/sHijing_0-12fm.dat
 
+// for ROOT Hijing
+// try inputFile = "https://www.phenix.bnl.gov/WWW/publish/phnxbld/sPHENIX/files/sPHENIX_G4Hits_sHijing_9-11fm_00000_00010.root"
+
 int Fun4All_G4_sPHENIX(
     const int nJob = 0,
     const int nEvents = 1,
-    const string &inputFile = "https://www.phenix.bnl.gov/WWW/publish/phnxbld/sPHENIX/files/sPHENIX_G4Hits_sHijing_9-11fm_00000_00010.root",
+    const string &inputFile = "/sphenix/sim/sim01/sphnxpro/sHijing_HepMC/sHijing_0-12fm.dat",
     const string &outputFile = "G4sPHENIX.root",
     const string &embed_input_file = "https://www.phenix.bnl.gov/WWW/publish/phnxbld/sPHENIX/files/sPHENIX_G4Hits_sHijing_9-11fm_00000_00010.root",
     const int skip = 0,
@@ -118,7 +121,7 @@ int Fun4All_G4_sPHENIX(
   //Input::UPSILON_NUMBER = 3; // if you need 3 of them
   //Input::UPSILON_VERBOSITY = 0;
 
-  //  Input::HEPMC = true;
+  Input::HEPMC = true;
   INPUTHEPMC::filename = inputFile;
 
   // Event pile up simulation with collision rate in Hz MB collisions.

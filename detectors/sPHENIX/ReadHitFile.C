@@ -59,7 +59,7 @@ void ReadHitFile(const int nJob = 0, const int nEvents = 1)
                            G4INTT::n_intt_layer,
                            G4TPC::n_gas_layer,
                            G4MICROMEGAS::n_micromegas_layer);
-  int do_default = 1;
+  int do_default = 0;
   if(do_default)
   {
     eval->do_cluster_eval(true);
@@ -73,12 +73,12 @@ void ReadHitFile(const int nJob = 0, const int nEvents = 1)
   {
     eval->do_cluster_eval(true);
     eval->do_g4cluster_eval(false);
-    eval->do_hit_eval(false);  // enable to see the hits that includes the chamber physics...
+    eval->do_hit_eval(true);  // enable to see the hits that includes the chamber physics...
     eval->do_vertex_eval(false);
-    eval->do_g4hit_eval(false);
-    eval->do_gtrack_eval(true);
-    eval->do_track_eval(true);
-    eval->do_track_match(true);
+    eval->do_g4hit_eval(true);
+    eval->do_gtrack_eval(false);
+    eval->do_track_eval(false);
+    eval->do_track_match(false);
     eval->do_gpoint_eval(false);
   }
   eval->do_eval_light(true);
@@ -92,7 +92,7 @@ void ReadHitFile(const int nJob = 0, const int nEvents = 1)
   Fun4AllInputManager *in = new Fun4AllDstInputManager("DSTin");
 
   //TString tstr_input(embed_infile1);
-  in->AddFile(embed_infile1);
+  //in->AddFile(embed_infile1);
   TString tstr_input(inputFile);
   if (tstr_input.EndsWith(".root"))
     in->AddFile(inputFile);
