@@ -39,9 +39,10 @@ R__LOAD_LIBRARY(libfun4all.so)
 int Fun4All_G4_sPHENIX(
     const int nJob = 0,
     const int nEvents = 1,
-    const string &inputFile = "/sphenix/sim/sim01/sphnxpro/sHijing_HepMC/sHijing_0-12fm.dat",
+    const string &embed_input_file0 = "DST_TRUTH_G4HIT_sHijing_0_12fm_50kHz_bkg_0_20fm-0000000002-00001.root",
+    const string &embed_input_file1 = "DST_TRKR_G4HIT_sHijing_0_12fm_50kHz_bkg_0_20fm-0000000002-00001.root",
+    const string &embed_input_file2 = "DST_CALO_G4HIT_sHijing_0_12fm_50kHz_bkg_0_20fm-0000000002-00001.root",
     const string &outputFile = "G4sPHENIX.root",
-    const string &embed_input_file = "https://www.phenix.bnl.gov/WWW/publish/phnxbld/sPHENIX/files/sPHENIX_G4Hits_sHijing_9-11fm_00000_00010.root",
     const int skip = 0,
     const string &outdir = "/phenix/spin/phnxsp01/zji/data/sphenix/output")
 {
@@ -72,6 +73,7 @@ int Fun4All_G4_sPHENIX(
   // database
   rc->set_StringFlag("XPLOAD_CONFIG","test");
 
+  const string &inputFile = embed_input_file0;
 
   //===============
   // Input options
@@ -93,8 +95,10 @@ int Fun4All_G4_sPHENIX(
   // Further choose to embed newly simulated events to a previous simulation. Not compatible with `readhits = true`
   // In case embedding into a production output, please double check your G4Setup_sPHENIX.C and G4_*.C consistent with those in the production macro folder
   // E.g. /sphenix/sim//sim01/production/2016-07-21/single_particle/spacal2d/
-  //  Input::EMBED = true;
-  INPUTEMBED::filename[0] = embed_input_file;
+  Input::EMBED = true;
+  INPUTEMBED::filename[0] = embed_input_file0;
+  INPUTEMBED::filename[1] = embed_input_file1;
+  INPUTEMBED::filename[2] = embed_input_file2;
   // if you use a filelist
   //INPUTEMBED::listfile[0] = embed_input_file;
 
@@ -121,7 +125,7 @@ int Fun4All_G4_sPHENIX(
   //Input::UPSILON_NUMBER = 3; // if you need 3 of them
   //Input::UPSILON_VERBOSITY = 0;
 
-  Input::HEPMC = true;
+  //  Input::HEPMC = true;
   INPUTHEPMC::filename = inputFile;
 
   // Event pile up simulation with collision rate in Hz MB collisions.
@@ -276,29 +280,29 @@ int Fun4All_G4_sPHENIX(
   // central tracking
   Enable::MVTX = true;
   Enable::MVTX_CELL = Enable::MVTX && true;
-  Enable::MVTX_CLUSTER = Enable::MVTX_CELL && false;
+  Enable::MVTX_CLUSTER = Enable::MVTX_CELL && true;
   Enable::MVTX_QA = Enable::MVTX_CLUSTER and Enable::QA && true;
   Enable::TrackingService = true;
 
   Enable::INTT = true;
   Enable::INTT_CELL = Enable::INTT && true;
-  Enable::INTT_CLUSTER = Enable::INTT_CELL && false;
+  Enable::INTT_CLUSTER = Enable::INTT_CELL && true;
   Enable::INTT_QA = Enable::INTT_CLUSTER and Enable::QA && true;
 
   Enable::TPC = true;
   Enable::TPC_ABSORBER = true;
   Enable::TPC_CELL = Enable::TPC && true;
-  Enable::TPC_CLUSTER = Enable::TPC_CELL && false;
+  Enable::TPC_CLUSTER = Enable::TPC_CELL && true;
   Enable::TPC_QA = Enable::TPC_CLUSTER and Enable::QA && true;
 
   Enable::MICROMEGAS = true;
   Enable::MICROMEGAS_CELL = Enable::MICROMEGAS && true;
-  Enable::MICROMEGAS_CLUSTER = Enable::MICROMEGAS_CELL && false;
+  Enable::MICROMEGAS_CLUSTER = Enable::MICROMEGAS_CELL && true;
   Enable::MICROMEGAS_QA = Enable::MICROMEGAS_CLUSTER && Enable::QA && true;
 
-  Enable::TRACKING_TRACK = false;
-  Enable::TRACKING_EVAL = Enable::TRACKING_TRACK && false;
-  Enable::TRACKING_QA = Enable::TRACKING_TRACK and Enable::QA && false;
+  Enable::TRACKING_TRACK = true;
+  Enable::TRACKING_EVAL = Enable::TRACKING_TRACK && true;
+  Enable::TRACKING_QA = Enable::TRACKING_TRACK and Enable::QA && true;
 
   //  cemc electronics + thin layer of W-epoxy to get albedo from cemc
   //  into the tracking, cannot run together with CEMC
@@ -336,7 +340,7 @@ int Fun4All_G4_sPHENIX(
   Enable::BEAMLINE = true;
 //  Enable::BEAMLINE_ABSORBER = true;  // makes the beam line magnets sensitive volumes
 //  Enable::BEAMLINE_BLACKHOLE = true; // turns the beamline magnets into black holes
-  Enable::ZDC = true;
+  Enable::ZDC = false;
 //  Enable::ZDC_ABSORBER = true;
 //  Enable::ZDC_SUPPORT = true;
   Enable::ZDC_TOWER = Enable::ZDC && true;
@@ -369,7 +373,7 @@ int Fun4All_G4_sPHENIX(
   // particle flow jet reconstruction - needs topoClusters!
   Enable::PARTICLEFLOW = true && Enable::TOPOCLUSTER;
   // centrality reconstruction
-  Enable::CENTRALITY = true;
+  Enable::CENTRALITY = false;
 
   // new settings using Enable namespace in GlobalVariables.C
   Enable::BLACKHOLE = true;
@@ -521,19 +525,19 @@ int Fun4All_G4_sPHENIX(
     outputroot.erase(pos, remove_this.length());
   }
 
-  DstOut::OutputFile = outputroot + nJob + ".root";
+  DstOut::OutputFile = outputroot + "-" + nJob + ".root";
 
-  if (Enable::TRACKING_EVAL) Tracking_Eval(outputroot + "_g4svtx_eval.root");
+  if (Enable::TRACKING_EVAL) Tracking_Eval(outputroot + "_g4svtx_eval-" + nJob + ".root");
 
-  if (Enable::CEMC_EVAL) CEMC_Eval(outputroot + "_g4cemc_eval.root");
+  if (Enable::CEMC_EVAL) CEMC_Eval(outputroot + "_g4cemc_eval-" + nJob + ".root");
 
-  if (Enable::HCALIN_EVAL) HCALInner_Eval(outputroot + "_g4hcalin_eval.root");
+  if (Enable::HCALIN_EVAL) HCALInner_Eval(outputroot + "_g4hcalin_eval-" + nJob + ".root");
 
-  if (Enable::HCALOUT_EVAL) HCALOuter_Eval(outputroot + "_g4hcalout_eval.root");
+  if (Enable::HCALOUT_EVAL) HCALOuter_Eval(outputroot + "_g4hcalout_eval-" + nJob + ".root");
 
-  if (Enable::JETS_EVAL) Jet_Eval(outputroot + "_g4jet_eval.root");
+  if (Enable::JETS_EVAL) Jet_Eval(outputroot + "_g4jet_eval-" + nJob + ".root");
 
-  if (Enable::DSTREADER) G4DSTreader(outputroot + "_DSTReader.root");
+  if (Enable::DSTREADER) G4DSTreader(outputroot + "_DSTReader-" + nJob + ".root");
 
   if (Enable::USER) UserAnalysisInit();
 
