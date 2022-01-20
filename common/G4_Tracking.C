@@ -443,15 +443,20 @@ void Tracking_Eval(const std::string& outputfile)
                            G4INTT::n_intt_layer,
                            G4TPC::n_gas_layer,
                            G4MICROMEGAS::n_micromegas_layer);
+  eval->do_g4cluster_eval(true);
   eval->do_cluster_eval(true);
   eval->do_g4hit_eval(true);
   eval->do_hit_eval(true);  // enable to see the hits that includes the chamber physics...
-  eval->do_gpoint_eval(true);
+  eval->do_gtrack_eval(false);
+  eval->do_track_eval(false);
+  eval->do_track_match(false);
+  eval->do_gpoint_eval(false);
+  eval->do_vertex_eval(false);
   eval->do_vtx_eval_light(true);
   eval->do_eval_light(true);
   eval->set_use_initial_vertex(G4TRACKING::g4eval_use_initial_vertex);
-  eval->scan_for_embedded(true);   // take all tracks if false - take only embedded tracks if true
-  eval->scan_for_primaries(true);  // defaults to only thrown particles for ntp_gtrack
+  eval->scan_for_embedded(false);   // take all tracks if false - take only embedded tracks if true
+  eval->scan_for_primaries(false);  // defaults to only thrown particles for ntp_gtrack
   eval->Verbosity(verbosity);
   se->registerSubsystem(eval);
 

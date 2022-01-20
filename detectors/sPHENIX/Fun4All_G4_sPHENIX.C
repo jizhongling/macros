@@ -17,7 +17,7 @@
 #include <G4_ParticleFlow.C>
 #include <G4_Production.C>
 #include <G4_TopoClusterReco.C>
-#include <G4_Tracking.C>
+#include <../../common/G4_Tracking.C>
 #include <G4_User.C>
 #include <QA.C>
 
@@ -41,7 +41,6 @@ int Fun4All_G4_sPHENIX(
     const int nEvents = 1,
     const string &embed_input_file0 = "DST_TRUTH_G4HIT_sHijing_0_12fm_50kHz_bkg_0_20fm-0000000002-00001.root",
     const string &embed_input_file1 = "DST_TRKR_G4HIT_sHijing_0_12fm_50kHz_bkg_0_20fm-0000000002-00001.root",
-    const string &embed_input_file2 = "DST_CALO_G4HIT_sHijing_0_12fm_50kHz_bkg_0_20fm-0000000002-00001.root",
     const string &outputFile = "G4sPHENIX.root",
     const int skip = 0,
     const string &outdir = "/phenix/spin/phnxsp01/zji/data/sphenix/output")
@@ -98,7 +97,6 @@ int Fun4All_G4_sPHENIX(
   Input::EMBED = true;
   INPUTEMBED::filename[0] = embed_input_file0;
   INPUTEMBED::filename[1] = embed_input_file1;
-  INPUTEMBED::filename[2] = embed_input_file2;
   // if you use a filelist
   //INPUTEMBED::listfile[0] = embed_input_file;
 
@@ -247,10 +245,9 @@ int Fun4All_G4_sPHENIX(
   // Write the DST
   //======================
 
-  Enable::DSTOUT = true;
+  //Enable::DSTOUT = true;
   Enable::DSTOUT_COMPRESS = false;
   DstOut::OutputDir = outdir;
-  //DstOut::OutputFile = outputFile;
 
   //Option to convert DST to human command readable TTree for quick poke around the outputs
   //  Enable::DSTREADER = true;
@@ -524,20 +521,22 @@ int Fun4All_G4_sPHENIX(
   {
     outputroot.erase(pos, remove_this.length());
   }
+  string fullroot = DstOut::OutputDir + "/" + outputroot;
+  string suffix = string("-") + to_string(nJob) + ".root";
 
-  DstOut::OutputFile = outputroot + "-" + nJob + ".root";
+  DstOut::OutputFile = outputroot + suffix;
 
-  if (Enable::TRACKING_EVAL) Tracking_Eval(outputroot + "_g4svtx_eval-" + nJob + ".root");
+  if (Enable::TRACKING_EVAL) Tracking_Eval(fullroot + "_g4svtx_eval" + suffix);
 
-  if (Enable::CEMC_EVAL) CEMC_Eval(outputroot + "_g4cemc_eval-" + nJob + ".root");
+  if (Enable::CEMC_EVAL) CEMC_Eval(fullroot + "_g4cemc_eval" + suffix);
 
-  if (Enable::HCALIN_EVAL) HCALInner_Eval(outputroot + "_g4hcalin_eval-" + nJob + ".root");
+  if (Enable::HCALIN_EVAL) HCALInner_Eval(fullroot + "_g4hcalin_eval" + suffix);
 
-  if (Enable::HCALOUT_EVAL) HCALOuter_Eval(outputroot + "_g4hcalout_eval-" + nJob + ".root");
+  if (Enable::HCALOUT_EVAL) HCALOuter_Eval(fullroot + "_g4hcalout_eval" + suffix);
 
-  if (Enable::JETS_EVAL) Jet_Eval(outputroot + "_g4jet_eval-" + nJob + ".root");
+  if (Enable::JETS_EVAL) Jet_Eval(fullroot + "_g4jet_eval" + suffix);
 
-  if (Enable::DSTREADER) G4DSTreader(outputroot + "_DSTReader-" + nJob + ".root");
+  if (Enable::DSTREADER) G4DSTreader(fullroot + "_DSTReader" + suffix);
 
   if (Enable::USER) UserAnalysisInit();
 

@@ -1,14 +1,14 @@
 void DrawHitCluster()
 {
-  const Int_t nh = 2;
-  const char *name[nh] = {"hit", "cluster"};
-  const char *opt[nh] = {"COL", "SAME"};
+  const Int_t nh = 3;
+  const char *name[nh] = {"hit", "cluster", "g4cluster"};
+  const char *opt[nh] = {"COL", "CONT SAME", "SAME"};
 
   TCanvas *c = new TCanvas("c", "c", 600, 600);
   gStyle->SetOptStat(0);
   gStyle->SetOptFit(1111);
 
-  TFile *f = new TFile("/phenix/spin/phnxsp01/zji/data/sphenix/output/G4sPHENIX_g4svtx_eval0.root");
+  TFile *f = new TFile("/phenix/spin/phnxsp01/zji/data/sphenix/output/G4sPHENIX_g4svtx_eval.root");
   for(Int_t ih=0; ih<nh; ih++)
   {
     TNtuple *ntp = (TNtuple*)f->Get(Form("ntp_%s",name[ih]));
@@ -16,8 +16,8 @@ void DrawHitCluster()
     ntp->SetBranchAddress("event", &event);
     ntp->SetBranchAddress("layer", &layer);
     ntp->SetBranchAddress("adc", &adc);
-    ntp->SetBranchAddress("phi", &phi);
-    ntp->SetBranchAddress("z", &z);
+    ntp->SetBranchAddress(name[ih][0] == 'g' ? "gphi" : "phi", &phi);
+    ntp->SetBranchAddress(name[ih][0] == 'g' ? "gz" : "z", &z);
 
     TH2 *h2 = new TH2F(Form("h2_%s",name[ih]), "", 100,10.,40., 100,-0.8,0.);
     for(Int_t ien=0; ien<ntp->GetEntries(); ien++)
