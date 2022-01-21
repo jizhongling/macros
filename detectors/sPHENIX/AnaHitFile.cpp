@@ -63,15 +63,13 @@ int main(int argc, const char *argv[])
 
   vector<vector<Float_t>> v_g4cluster;
   vector<vector<Float_t>> v_hit;
-  vector<vector<Float_t>>::iterator it_g4cluster;
-  vector<vector<Float_t>>::iterator it_hit;
 
   Int_t layer = 35;
   query(f, "ntp_g4cluster", "event:gphi:gz", Form("event==0&&layer==%d", layer), v_g4cluster);
-  for(it_g4cluster = v_g4cluster.begin(); it_g4cluster != v_g4cluster.end(); it_g4cluster++)
+  for(auto it_g4cluster = v_g4cluster.begin(); it_g4cluster != v_g4cluster.end(); it_g4cluster++)
   {
     query(f, "ntp_hit", "phi:z:phibin:zbin", Form("event==%d&&layer==%d", Int_t(it_g4cluster->at(0)), layer), v_hit);
-    for(it_hit = v_hit.begin(); it_hit != v_hit.end(); it_hit++)
+    for(auto it_hit = v_hit.begin(); it_hit != v_hit.end(); it_hit++)
       if( fabs(it_g4cluster->at(1) - it_hit->at(0)) < 0.05 && fabs(it_g4cluster->at(2) - it_hit->at(1)) < 0.1 )
         cout << it_hit->at(2) << " | " << it_hit->at(3) << endl;
   }
