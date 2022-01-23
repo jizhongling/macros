@@ -51,7 +51,7 @@ int main(int argc, const char *argv[])
 {
   if(argc != 3)
   {
-    cerr << "Usage: " << argv[0] << " <path-to-eval-file> <path-to-output-file>" << endl;
+    cerr << "Usage: " << argv[0] << " <eval.root> <output.root>" << endl;
     return 1;
   }
 
