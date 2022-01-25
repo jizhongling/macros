@@ -4,7 +4,7 @@ void DrawHitCluster()
   const char *name[nh] = {"hit", "cluster", "g4cluster"};
   const char *opt[nh] = {"COL", "CONT SAME", "SAME"};
 
-  TCanvas *c = new TCanvas("c", "c", 600, 600);
+  TCanvas *c = new TCanvas("c", "c", 600, 3000);
   gStyle->SetOptStat(0);
   gStyle->SetOptFit(1111);
 

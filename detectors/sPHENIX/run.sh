@@ -1,8 +1,13 @@
 #!/bin/bash
 
 PROC=$1
-NEV=$2
+inFile=$SPIN/data/sphenix/output/G4sPHENIX_g4svtx_eval-$PROC.root
+if [ ! -f $inFile ] ; then
+  exit 0
+fi
 
 mkdir -p $SPIN/data/sphenix/output $SPIN/data/sphenix/histos
-root -l -b -q Fun4All_G4_sPHENIX.C\($PROC,$NEV\)
-root -l -b -q ReadHitFile.C\($PROC,$NEV\)
+for i in {0..7} ; do
+  ./AnaHitFile $inFile $SPIN/data/sphenix/histos/training-$PROC $i &
+done
+wait
