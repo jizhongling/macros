@@ -84,6 +84,9 @@ int main(int argc, const char *argv[])
   array<Short_t, (2*nd+1)*(2*nd+1)> v_adc;
   Short_t li;
   Float_t zr;
+  vector<Float_t> v_reco_phi;
+  vector<Float_t> v_reco_z;
+  Short_t nreco;
   vector<Float_t> v_truth_phi;
   vector<Float_t> v_truth_z;
   Short_t ntruth;
@@ -93,6 +96,9 @@ int main(int argc, const char *argv[])
   t_out->Branch("adc", &v_adc);
   t_out->Branch("layer", &li);
   t_out->Branch("ztan", &zr);
+  t_out->Branch("reco_phi", &v_reco_phi);
+  t_out->Branch("reco_z", &v_reco_z);
+  t_out->Branch("nreco", &nreco);
   t_out->Branch("truth_phi", &v_truth_phi);
   t_out->Branch("truth_z", &v_truth_z);
   t_out->Branch("ntruth", &ntruth);
@@ -132,13 +138,23 @@ int main(int argc, const char *argv[])
 
           zr = cluster[1] / radius[li];
           v_adc.fill(0);
+          v_reco_phi.clear();
+          v_reco_z.clear();
+          nreco = 0;
           v_truth_phi.clear();
           v_truth_z.clear();
           ntruth = 0;
 
           for(const auto &searched : v_cluster)
             if( fabs(searched[0] - cluster[0]) < region_phi && fabs(searched[1] - cluster[1]) < region_z )
+            {
+              Float_t norm_phi = (searched[0] - cluster[0]) / width_phi[li];
+              Float_t norm_z = (searched[1] - cluster[1]) / width_z;
+              v_reco_phi.emplace_back(norm_phi);
+              v_reco_z.emplace_back(norm_z);
               v_searched.emplace_back(searched);
+            }
+          nreco = v_reco_phi.size();
 
           for(const auto &hit : v_hit)
             if( fabs(hit[0] - cluster[0]) < region_phi && fabs(hit[1] - cluster[1]) < region_z )
