@@ -63,8 +63,9 @@ int main(int argc, const char *argv[])
   }
   cout << "Open file " << argv[1] << endl;
 
-  TNtuple *ntp_cluster = static_cast<TNtuple*>(f->Get("ntp_cluster"));
   TNtuple *ntp_hit = static_cast<TNtuple*>(f->Get("ntp_hit"));
+  TNtuple *ntp_g4hit = static_cast<TNtuple*>(f->Get("ntp_g4hit"));
+  TNtuple *ntp_cluster = static_cast<TNtuple*>(f->Get("ntp_cluster"));
   TNtuple *ntp_g4cluster = static_cast<TNtuple*>(f->Get("ntp_g4cluster"));
 
   Float_t last_event;
@@ -80,8 +81,9 @@ int main(int argc, const char *argv[])
     return 0;
   }
 
-  const size_t nd = 5;
+  const size_t nd = 10;
   array<Short_t, (2*nd+1)*(2*nd+1)> v_adc;
+  array<Float_t, (2*nd+1)*(2*nd+1)> v_gedep;
   Short_t li;
   Float_t zr;
   vector<Float_t> v_reco_phi;
@@ -94,6 +96,7 @@ int main(int argc, const char *argv[])
   auto f_out = new TFile(Form("%s-%d.root", argv[2], ith), "RECREATE");
   auto t_out = new TTree("T", "Training data");
   t_out->Branch("adc", &v_adc);
+  t_out->Branch("gedep", &v_gedep);
   t_out->Branch("layer", &li);
   t_out->Branch("ztan", &zr);
   t_out->Branch("reco_phi", &v_reco_phi);
@@ -117,13 +120,15 @@ int main(int argc, const char *argv[])
       else
         li = 2;
 
-      vvF v_cluster;
-      vvF v_searched;
       vvF v_hit;
+      vvF v_g4hit;
+      vvF v_cluster;
       vvF v_g4cluster;
+      vvF v_searched;
 
-      query(ntp_cluster, "phi:z", Form("event==%d && layer==%d", event, layer), v_cluster);
       query(ntp_hit, "phi:z:adc", Form("event==%d && layer==%d", event, layer), v_hit);
+      query(ntp_g4hit, "gphi:gz:gedep", Form("event==%d && layer==%d", event, layer), v_g4hit);
+      query(ntp_cluster, "phi:z", Form("event==%d && layer==%d", event, layer), v_cluster);
       query(ntp_g4cluster, "gphi:gz", Form("event==%d && layer==%d", event, layer), v_g4cluster);
 
       for(const auto &cluster : v_cluster)
@@ -138,12 +143,31 @@ int main(int argc, const char *argv[])
 
           zr = cluster[1] / radius[li];
           v_adc.fill(0);
+          v_gedep.fill(0.);
           v_reco_phi.clear();
           v_reco_z.clear();
           nreco = 0;
           v_truth_phi.clear();
           v_truth_z.clear();
           ntruth = 0;
+
+          for(const auto &hit : v_hit)
+            if( fabs(hit[0] - cluster[0]) < region_phi && fabs(hit[1] - cluster[1]) < region_z )
+            {
+              Float_t bin_phi = round((hit[0] - cluster[0]) / width_phi[li]);
+              Float_t bin_z = round((hit[1] - cluster[1]) / width_z);
+              size_t bin_i = static_cast<size_t>((bin_phi+nd)*(2*nd+1) + (bin_z+nd));
+              v_adc[bin_i] = static_cast<Short_t>(hit[2]);
+            }
+
+          for(const auto &g4hit : v_g4hit)
+            if( fabs(g4hit[0] - cluster[0]) < region_phi && fabs(g4hit[1] - cluster[1]) < region_z )
+            {
+              Float_t bin_phi = round((g4hit[0] - cluster[0]) / width_phi[li]);
+              Float_t bin_z = round((g4hit[1] - cluster[1]) / width_z);
+              size_t bin_i = static_cast<size_t>((bin_phi+nd)*(2*nd+1) + (bin_z+nd));
+              v_gedep[bin_i] = g4hit[2];
+            }
 
           for(const auto &searched : v_cluster)
             if( fabs(searched[0] - cluster[0]) < region_phi && fabs(searched[1] - cluster[1]) < region_z )
@@ -155,15 +179,6 @@ int main(int argc, const char *argv[])
               v_searched.emplace_back(searched);
             }
           nreco = v_reco_phi.size();
-
-          for(const auto &hit : v_hit)
-            if( fabs(hit[0] - cluster[0]) < region_phi && fabs(hit[1] - cluster[1]) < region_z )
-            {
-              Float_t bin_phi = round((hit[0] - cluster[0]) / width_phi[li]);
-              Float_t bin_z = round((hit[1] - cluster[1]) / width_z);
-              size_t bin_i = static_cast<size_t>((bin_phi+nd)*(2*nd+1) + (bin_z+nd));
-              v_adc[bin_i] = static_cast<Short_t>(hit[2]);
-            }
 
           for(const auto &g4cluster : v_g4cluster)
             if( fabs(g4cluster[0] - cluster[0]) < region_phi && fabs(g4cluster[1] - cluster[1]) < region_z )
