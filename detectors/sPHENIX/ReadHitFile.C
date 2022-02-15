@@ -71,10 +71,10 @@ void ReadHitFile(const int nJob = 0, const int nEvents = 1)
   }
   else
   {
-    eval->do_g4cluster_eval(true);
     eval->do_cluster_eval(true);
-    eval->do_g4hit_eval(true);
+    eval->do_g4cluster_eval(true);
     eval->do_hit_eval(true);  // enable to see the hits that includes the chamber physics...
+    eval->do_g4hit_eval(false);
     eval->do_gtrack_eval(false);
     eval->do_track_eval(false);
     eval->do_track_match(false);
