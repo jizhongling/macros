@@ -146,7 +146,7 @@ int main(int argc, const char *argv[])
           v_adc.fill(0);
           v_reco_phi.fill(0.);
           v_reco_z.fill(0.);
-          v_reco_adc.fill(0.);
+          v_reco_adc.fill(0);
           v_nreco.fill(0);
           v_truth_phi.fill(0.);
           v_truth_z.fill(0.);

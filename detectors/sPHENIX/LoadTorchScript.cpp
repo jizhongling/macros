@@ -72,19 +72,19 @@ int main(int argc, const char *argv[])
   // Create a vector of inputs
   vector<torch::jit::IValue> inputs;
   inputs.push_back(torch::stack({
-        torch::from_blob(vector<Float_t>(v_adc.begin(), v_adc.end()).data(), {1, 21, 21}, torch::kFloat32).sub(75).clamp_min(0),
-        torch::full({1, 21, 21}, li, torch::kFloat32),
-        torch::full({1, 21, 21}, zr, torch::kFloat32)
+        torch::from_blob(vector<Float_t>(v_adc.begin(), v_adc.end()).data(), {1, 11, 11}, torch::kFloat32).sub(75).clamp_min(0),
+        torch::full({1, 11, 11}, li, torch::kFloat32),
+        torch::full({1, 11, 11}, zr, torch::kFloat32)
         }, 1));
 
   // Execute the model and turn its output into a tensor
   at::Tensor output = module.forward(inputs).toTensor();
-  cout << output.slice(/*dim=*/1, /*start=*/5, /*end=*/16).slice(2, 5, 16) << endl;
-  cout << "Output value at Row 4(9) Column 6(11) is " << output.data_ptr<float>()[8*21+10] << endl;
+  cout << output.slice(/*dim=*/1, /*start=*/0, /*end=*/2).slice(2, 0, 2) << endl;
+  cout << "NN phi position (3 clusters): " << output.data_ptr<float>()[0] << ", " << output.data_ptr<float>()[3] << endl;
 
   at::Tensor target = torch::from_blob(vector<Float_t>(v_gedep.begin(), v_gedep.end()).data(), {1, 21, 21}, torch::kFloat32).mul(1e6).clamp_max(10);
-  cout << target.slice(/*dim=*/1, /*start=*/5, /*end=*/16).slice(2, 5, 16) << endl;
-  cout << "Target value at Row 4(9) Column 6(11) is " << target.data_ptr<float>()[8*21+10] << endl;
+  cout << target.slice(/*dim=*/1, /*start=*/0, /*end=*/2).slice(2, 0, 2) << endl;
+  cout << "Target phi position (3 clusters): " << target.data_ptr<float>()[0] << ", " << target.data_ptr<float>()[3] << endl;
 
   return 0;
 }
