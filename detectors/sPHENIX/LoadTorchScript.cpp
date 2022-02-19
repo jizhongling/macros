@@ -16,9 +16,9 @@ using namespace std;
 
 int main(int argc, const char *argv[])
 {
-  if(argc != 4)
+  if(argc != 5)
   {
-    cerr << "Usage: " << argv[0] << " <script-module> <root-file> <ientry>" << endl;
+    cerr << "Usage: " << argv[0] << " <script-module> <type> <root-file> <ientry>" << endl;
     return 1;
   }
 
@@ -33,58 +33,66 @@ int main(int argc, const char *argv[])
     cerr << "Error: cannot load model " << argv[1] << endl;
     return 1;
   }
-  cout << "Load model " << argv[1] << endl;
+  const int type = stoi(string(argv[2]));
+  cout << "Load model " << argv[1] << " with type " << type << endl;
 
-  auto f = new TFile(argv[2]);
+  auto f = new TFile(argv[3]);
   if(f->IsZombie())
   {
-    cerr << "Error: cannot open file " << argv[2] << endl;
+    cerr << "Error: cannot open file " << argv[3] << endl;
     return 1;
   }
-  cout << "Open file " << argv[2] << endl;
+  cout << "Open file " << argv[3] << endl;
 
-  const size_t nd = 10;
-  array<Short_t, (2*nd+1)*(2*nd+1)> v_adc;
-  array<Float_t, (2*nd+1)*(2*nd+1)> v_gedep;
+  const size_t nd = 5;
+  const size_t nc = 10;
+  const size_t nb = 20;
   Short_t li;
   Float_t zr;
-  vector<Float_t> *v_reco_phi = 0;
-  vector<Float_t> *v_reco_z = 0;
-  Short_t nreco;
-  vector<Float_t> *v_truth_phi = 0;
-  vector<Float_t> *v_truth_z = 0;
-  Short_t ntruth;
+  array<Short_t, (2*nd+1)*(2*nd+1)> v_adc;
+  array<Float_t, nc> v_reco_phi;
+  array<Float_t, nc> v_reco_z;
+  array<Short_t, nc> v_reco_adc;
+  array<Short_t, nb> v_nreco;
+  array<Float_t, nc> v_truth_phi;
+  array<Float_t, nc> v_truth_z;
+  array<Float_t, nc> v_truth_edep;
+  array<Short_t, nb> v_ntruth;
 
   TTree *T = static_cast<TTree*>(f->Get("T"));
-  T->SetBranchAddress("adc", &v_adc);
-  T->SetBranchAddress("gedep", &v_gedep);
   T->SetBranchAddress("layer", &li);
   T->SetBranchAddress("ztan", &zr);
+  T->SetBranchAddress("adc", &v_adc);
   T->SetBranchAddress("reco_phi", &v_reco_phi);
   T->SetBranchAddress("reco_z", &v_reco_z);
-  T->SetBranchAddress("nreco", &nreco);
+  T->SetBranchAddress("reco_adc", &v_reco_adc);
+  T->SetBranchAddress("nreco", &v_nreco);
   T->SetBranchAddress("truth_phi", &v_truth_phi);
   T->SetBranchAddress("truth_z", &v_truth_z);
-  T->SetBranchAddress("ntruth", &ntruth);
+  T->SetBranchAddress("truth_edep", &v_truth_edep);
+  T->SetBranchAddress("ntruth", &v_ntruth);
 
-  T->GetEntry(stoi(string(argv[3])));
+  T->GetEntry(stoi(string(argv[4])));
 
   // Create a vector of inputs
   vector<torch::jit::IValue> inputs;
-  inputs.push_back(torch::stack({
-        torch::from_blob(vector<Float_t>(v_adc.begin(), v_adc.end()).data(), {1, 11, 11}, torch::kFloat32).sub(75).clamp_min(0),
-        torch::full({1, 11, 11}, li, torch::kFloat32),
-        torch::full({1, 11, 11}, zr, torch::kFloat32)
+  inputs.emplace_back(torch::stack({
+        torch::from_blob(vector<Float_t>(v_adc.begin(), v_adc.end()).data(), {1, 2*nd+1, 2*nd+1}, torch::kFloat32).sub(75).clamp_min(0),
+        torch::full({1, 2*nd+1, 2*nd+1}, li, torch::kFloat32),
+        torch::full({1, 2*nd+1, 2*nd+1}, zr, torch::kFloat32)
         }, 1));
 
   // Execute the model and turn its output into a tensor
   at::Tensor output = module.forward(inputs).toTensor();
-  cout << output.slice(/*dim=*/1, /*start=*/0, /*end=*/2).slice(2, 0, 2) << endl;
-  cout << "NN phi position (3 clusters): " << output.data_ptr<float>()[0] << ", " << output.data_ptr<float>()[3] << endl;
+  cout << "NN predictions: " << output.slice(/*dim=*/1, /*start=*/0, /*end=*/type).slice(2, 0, type) << endl
+    << "NN first (phi, z): " << output.data_ptr<float>()[0] << ", " << output.data_ptr<float>()[type] << endl;
 
-  at::Tensor target = torch::from_blob(vector<Float_t>(v_gedep.begin(), v_gedep.end()).data(), {1, 21, 21}, torch::kFloat32).mul(1e6).clamp_max(10);
-  cout << target.slice(/*dim=*/1, /*start=*/0, /*end=*/2).slice(2, 0, 2) << endl;
-  cout << "Target phi position (3 clusters): " << target.data_ptr<float>()[0] << ", " << target.data_ptr<float>()[3] << endl;
+  at::Tensor truth_phi = torch::from_blob(vector<Short_t>(v_ntruth.begin(), v_ntruth.end()).data(), {1, nb}, torch::kFloat32);
+  at::Tensor truth_z = torch::from_blob(vector<Float_t>(v_truth_z.begin(), v_truth_z.end()).data(), {1, nc}, torch::kFloat32);
+  cout << "Truth (phi,z): ";
+  for(size_t i=0; i<nc; i++)
+    cout << "(" << v_truth_phi[i] << ", " << v_truth_z[i] << "), ";
+  cout << endl;
 
   return 0;
 }
