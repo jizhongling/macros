@@ -130,7 +130,7 @@ int main(int argc, const char *argv[])
 
       query(ntp_hit, "phi:z:adc", Form("event==%d && layer==%d", event, layer), v_hit);
       query(ntp_cluster, "phi:z:adc", Form("event==%d && layer==%d", event, layer), v_cluster);
-      query(ntp_g4cluster, "gphi:gz:gedep", Form("event==%d && layer==%d", event, layer), v_g4cluster);
+      query(ntp_g4cluster, "gphi:gz:gedep:gprimary", Form("event==%d && layer==%d", event, layer), v_g4cluster);
 
       for(const auto &cluster : v_cluster)
         if( find(v_searched.begin(), v_searched.end(), cluster) == v_searched.end() )
@@ -155,7 +155,8 @@ int main(int argc, const char *argv[])
           size_t counter;
 
           for(const auto &hit : v_hit)
-            if( fabs(hit[0] - cluster[0]) < region_phi && fabs(hit[1] - cluster[1]) < region_z )
+            if( fabs(hit[0] - cluster[0]) < region_phi &&
+                fabs(hit[1] - cluster[1]) < region_z )
             {
               Float_t bin_phi = round((hit[0] - cluster[0]) / width_phi[li]);
               Float_t bin_z = round((hit[1] - cluster[1]) / width_z);
@@ -165,7 +166,8 @@ int main(int argc, const char *argv[])
 
           counter = 0;
           for(const auto &searched : v_cluster)
-            if( fabs(searched[0] - cluster[0]) < region_phi && fabs(searched[1] - cluster[1]) < region_z )
+            if( fabs(searched[0] - cluster[0]) < region_phi &&
+                fabs(searched[1] - cluster[1]) < region_z )
             {
               size_t ic = min(counter++, nc - 1);
               v_reco_phi[ic] = (searched[0] - cluster[0]) / width_phi[li];
@@ -178,7 +180,9 @@ int main(int argc, const char *argv[])
 
           counter = 0;
           for(const auto &g4cluster : v_g4cluster)
-            if( fabs(g4cluster[0] - cluster[0]) < region_phi && fabs(g4cluster[1] - cluster[1]) < region_z )
+            if( g4cluster[3] > 0.5 &&
+                fabs(g4cluster[0] - cluster[0]) < region_phi &&
+                fabs(g4cluster[1] - cluster[1]) < region_z )
             {
               size_t ic = min(counter++, nc - 1);
               v_truth_phi[ic] = (g4cluster[0] - cluster[0]) / width_phi[li];
