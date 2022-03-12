@@ -92,7 +92,7 @@ int main(int argc, const char *argv[])
   array<Short_t, nb> v_nreco;
   array<Float_t, nc> v_truth_phi;
   array<Float_t, nc> v_truth_z;
-  array<Float_t, nc> v_truth_edep;
+  array<Short_t, nc> v_truth_adc;
   array<Short_t, nb> v_ntruth;
 
   auto f_out = new TFile(Form("%s-%d.root", argv[2], ith), "RECREATE");
@@ -106,7 +106,7 @@ int main(int argc, const char *argv[])
   t_out->Branch("nreco", &v_nreco);
   t_out->Branch("truth_phi", &v_truth_phi);
   t_out->Branch("truth_z", &v_truth_z);
-  t_out->Branch("truth_edep", &v_truth_edep);
+  t_out->Branch("truth_adc", &v_truth_adc);
   t_out->Branch("ntruth", &v_ntruth);
 
   const Int_t nlayers_map = 3;
@@ -130,7 +130,7 @@ int main(int argc, const char *argv[])
 
       query(ntp_hit, "phi:z:adc", Form("event==%d && layer==%d", event, layer), v_hit);
       query(ntp_cluster, "phi:z:adc", Form("event==%d && layer==%d", event, layer), v_cluster);
-      query(ntp_g4cluster, "gphi:gz:gedep:gprimary", Form("event==%d && layer==%d", event, layer), v_g4cluster);
+      query(ntp_g4cluster, "gphi:gz:gadc:gprimary", Form("event==%d && layer==%d", event, layer), v_g4cluster);
 
       for(const auto &cluster : v_cluster)
         if( find(v_searched.begin(), v_searched.end(), cluster) == v_searched.end() )
@@ -150,7 +150,7 @@ int main(int argc, const char *argv[])
           v_nreco.fill(0);
           v_truth_phi.fill(0.);
           v_truth_z.fill(0.);
-          v_truth_edep.fill(0.);
+          v_truth_adc.fill(0);
           v_ntruth.fill(0);
           size_t counter;
 
@@ -187,8 +187,8 @@ int main(int argc, const char *argv[])
               size_t ic = min(counter++, nc - 1);
               v_truth_phi[ic] = (g4cluster[0] - cluster[0]) / width_phi[li];
               v_truth_z[ic] = (g4cluster[1] - cluster[1]) / width_z;
-              v_truth_edep[ic] = g4cluster[2];
-              size_t ib = min(static_cast<size_t>(floor(g4cluster[2]/(4e-6/nb))), nb - 1);
+              v_truth_adc[ic] = static_cast<Short_t>(g4cluster[2]);
+              size_t ib = min(static_cast<size_t>(floor(g4cluster[2]/(400./nb))), nb - 1);
               v_ntruth[ib]++;
             }
 

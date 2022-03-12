@@ -30,7 +30,7 @@ int main(int argc, const char *argv[])
   }
   catch(const c10::Error &e)
   {
-    cerr << "Error: cannot load model " << argv[1] << endl;
+    cerr << "Error: Cannot load model " << argv[1] << endl;
     return 1;
   }
   const int type = stoi(string(argv[2]));
@@ -39,7 +39,7 @@ int main(int argc, const char *argv[])
   auto f = new TFile(argv[3]);
   if(f->IsZombie())
   {
-    cerr << "Error: cannot open file " << argv[3] << endl;
+    cerr << "Error: Cannot open file " << argv[3] << endl;
     return 1;
   }
   cout << "Open file " << argv[3] << endl;
@@ -56,7 +56,7 @@ int main(int argc, const char *argv[])
   array<Short_t, nb> v_nreco;
   array<Float_t, nc> v_truth_phi;
   array<Float_t, nc> v_truth_z;
-  array<Float_t, nc> v_truth_edep;
+  array<Short_t, nc> v_truth_adc;
   array<Short_t, nb> v_ntruth;
 
   TTree *T = static_cast<TTree*>(f->Get("T"));
@@ -69,30 +69,47 @@ int main(int argc, const char *argv[])
   T->SetBranchAddress("nreco", &v_nreco);
   T->SetBranchAddress("truth_phi", &v_truth_phi);
   T->SetBranchAddress("truth_z", &v_truth_z);
-  T->SetBranchAddress("truth_edep", &v_truth_edep);
+  T->SetBranchAddress("truth_adc", &v_truth_adc);
   T->SetBranchAddress("ntruth", &v_ntruth);
 
   T->GetEntry(stoi(string(argv[4])));
 
-  // Create a vector of inputs
-  vector<torch::jit::IValue> inputs;
-  inputs.emplace_back(torch::stack({
-        torch::from_blob(vector<Float_t>(v_adc.begin(), v_adc.end()).data(), {1, 2*nd+1, 2*nd+1}, torch::kFloat32).sub(75).clamp_min(0),
-        torch::full({1, 2*nd+1, 2*nd+1}, li, torch::kFloat32),
-        torch::full({1, 2*nd+1, 2*nd+1}, zr, torch::kFloat32)
-        }, 1));
+  try
+  {
+    // Create a vector of inputs
+    vector<torch::jit::IValue> inputs;
+    inputs.emplace_back(torch::stack({
+          torch::from_blob(vector<Float_t>(v_adc.begin(), v_adc.end()).data(), {1, 2*nd+1, 2*nd+1}, torch::kFloat32).sub(75).clamp_min(0),
+          torch::full({1, 2*nd+1, 2*nd+1}, li, torch::kFloat32),
+          torch::full({1, 2*nd+1, 2*nd+1}, zr, torch::kFloat32)
+          }, 1));
 
-  // Execute the model and turn its output into a tensor
-  at::Tensor output = module.forward(inputs).toTensor();
-  cout << "NN predictions: " << output.slice(/*dim=*/1, /*start=*/0, /*end=*/type).slice(2, 0, type) << endl
-    << "NN first (phi, z): " << output.data_ptr<float>()[0] << ", " << output.data_ptr<float>()[type] << endl;
+    // Execute the model and turn its output into a tensor
+    at::Tensor output = module.forward(inputs).toTensor();
+    if(type == 0)
+    {
+      int ntruth = 0;
+      for(size_t i=5; i<nb; i++)
+        ntruth += v_ntruth[i];
+      cout << "NN predictions: " << output.argmax(1).data_ptr<int64_t>()[0] << endl
+        << "Truth clusters: " << ntruth << endl;
+      return 0;
+    }
+    cout << "NN predictions: " << output.slice(/*dim=*/1, /*start=*/0, /*end=*/type).slice(2, 0, type) << endl
+      << "NN first (phi, z): " << output.data_ptr<float>()[0] << ", " << output.data_ptr<float>()[type] << endl;
 
-  at::Tensor truth_phi = torch::from_blob(vector<Short_t>(v_ntruth.begin(), v_ntruth.end()).data(), {1, nb}, torch::kFloat32);
-  at::Tensor truth_z = torch::from_blob(vector<Float_t>(v_truth_z.begin(), v_truth_z.end()).data(), {1, nc}, torch::kFloat32);
-  cout << "Truth (phi,z): ";
-  for(size_t i=0; i<nc; i++)
-    cout << "(" << v_truth_phi[i] << ", " << v_truth_z[i] << "), ";
-  cout << endl;
+    at::Tensor truth_phi = torch::from_blob(vector<Short_t>(v_ntruth.begin(), v_ntruth.end()).data(), {1, nb}, torch::kFloat32);
+    at::Tensor truth_z = torch::from_blob(vector<Float_t>(v_truth_z.begin(), v_truth_z.end()).data(), {1, nc}, torch::kFloat32);
+    cout << "Truth (phi,z): ";
+    for(size_t i=0; i<nc; i++)
+      cout << "(" << v_truth_phi[i] << ", " << v_truth_z[i] << "), ";
+    cout << endl;
+  }
+  catch(const c10::Error &e)
+  {
+    cerr << "Error: Failed to execute NN modules" << endl;
+    return 1;
+  }
 
   return 0;
 }
