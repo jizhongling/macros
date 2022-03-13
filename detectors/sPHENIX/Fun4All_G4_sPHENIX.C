@@ -21,6 +21,7 @@
 #include <G4_User.C>
 #include <QA.C>
 
+#include <FROG.h>
 #include <fun4all/Fun4AllDstOutputManager.h>
 #include <fun4all/Fun4AllOutputManager.h>
 #include <fun4all/Fun4AllServer.h>
@@ -39,12 +40,14 @@ R__LOAD_LIBRARY(libfun4all.so)
 int Fun4All_G4_sPHENIX(
     const int nJob = 0,
     const int nEvents = 1,
-    const string &embed_input_file0 = "DST_TRUTH_G4HIT_sHijing_0_12fm_50kHz_bkg_0_20fm-0000000002-00001.root",
-    const string &embed_input_file1 = "DST_TRKR_G4HIT_sHijing_0_12fm_50kHz_bkg_0_20fm-0000000002-00001.root",
-    const string &outputFile = "G4sPHENIX.root",
+    const string &embed_input_file0 = "DST_TRUTH_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000003-00000.root",
+    const string &embed_input_file1 = "DST_TRKR_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000003-00000.root",
     const int skip = 0,
+    const string &outputFile = "G4sPHENIX.root",
     const string &outdir = "/phenix/spin/phnxsp01/zji/data/sphenix/output")
 {
+  FROG *fr = new FROG();
+  fr->Verbosity(0);
   Fun4AllServer *se = Fun4AllServer::instance();
   se->Verbosity(0);
 
@@ -85,7 +88,7 @@ int Fun4All_G4_sPHENIX(
   // the simulations step completely. The G4Setup macro is only loaded to get information
   // about the number of layers used for the cell reco code
   //  Input::READHITS = true;
-  INPUTREADHITS::filename[0] = inputFile;
+  INPUTREADHITS::filename[0] = fr->location(inputFile);
   // if you use a filelist
   // INPUTREADHITS::listfile[0] = inputFile;
   // Or:
@@ -95,8 +98,8 @@ int Fun4All_G4_sPHENIX(
   // In case embedding into a production output, please double check your G4Setup_sPHENIX.C and G4_*.C consistent with those in the production macro folder
   // E.g. /sphenix/sim//sim01/production/2016-07-21/single_particle/spacal2d/
   Input::EMBED = true;
-  INPUTEMBED::filename[0] = embed_input_file0;
-  INPUTEMBED::filename[1] = embed_input_file1;
+  INPUTEMBED::filename[0] = fr->location(embed_input_file0);
+  //INPUTEMBED::filename[1] = fr->location(embed_input_file1);
   // if you use a filelist
   //INPUTEMBED::listfile[0] = embed_input_file;
 
@@ -124,7 +127,7 @@ int Fun4All_G4_sPHENIX(
   //Input::UPSILON_VERBOSITY = 0;
 
   //  Input::HEPMC = true;
-  INPUTHEPMC::filename = inputFile;
+  INPUTHEPMC::filename = fr->location(inputFile);
 
   // Event pile up simulation with collision rate in Hz MB collisions.
   //Input::PILEUPRATE = 100e3;
@@ -635,6 +638,7 @@ int Fun4All_G4_sPHENIX(
   //se->PrintTimer();
   std::cout << "All done" << std::endl;
   delete se;
+  delete fr;
   if (Enable::PRODUCTION)
   {
     Production_MoveOutput();
