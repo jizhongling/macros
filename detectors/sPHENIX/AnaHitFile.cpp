@@ -63,7 +63,6 @@ int main(int argc, const char *argv[])
   }
   cout << "Open file " << argv[1] << endl;
 
-  TNtuple *ntp_hit = static_cast<TNtuple*>(f->Get("ntp_hit"));
   TNtuple *ntp_cluster = static_cast<TNtuple*>(f->Get("ntp_cluster"));
   TNtuple *ntp_g4cluster = static_cast<TNtuple*>(f->Get("ntp_g4cluster"));
 
@@ -72,7 +71,7 @@ int main(int argc, const char *argv[])
   ntp_cluster->GetEntry(ntp_cluster->GetEntries()-1);
   Int_t max_event = static_cast<Int_t>(last_event);
 
-  const Int_t nev = 5;
+  const Int_t nev = 10;
   const Int_t ith = stoi(string(argv[3]));
   if(ith*nev >= max_event)
   {
@@ -83,8 +82,8 @@ int main(int argc, const char *argv[])
   const size_t nd = 5;
   const size_t nc = 10;
   const size_t nb = 20;
-  Short_t li;
-  Float_t zr;
+  Short_t training_event, training_layer, li;
+  Float_t center_phi, center_z, zr;
   array<Short_t, (2*nd+1)*(2*nd+1)> v_adc;
   array<Float_t, nc> v_reco_phi;
   array<Float_t, nc> v_reco_z;
@@ -93,7 +92,16 @@ int main(int argc, const char *argv[])
   array<Float_t, nc> v_truth_phi;
   array<Float_t, nc> v_truth_z;
   array<Short_t, nc> v_truth_adc;
+  array<Float_t, nc> v_truth_phisize;
+  array<Float_t, nc> v_truth_zsize;
   array<Short_t, nb> v_ntruth;
+
+  TTree *t_training = static_cast<TTree*>(f->Get("t_training"));
+  t_training->Branch("event", &training_event);
+  t_training->Branch("layer", &training_layer);
+  t_training->Branch("phi", &center_phi);
+  t_training->Branch("z", &center_z);
+  t_training->Branch("adc", &v_adc);
 
   auto f_out = new TFile(Form("%s-%d.root", argv[2], ith), "RECREATE");
   auto t_out = new TTree("T", "Training data");
@@ -107,11 +115,16 @@ int main(int argc, const char *argv[])
   t_out->Branch("truth_phi", &v_truth_phi);
   t_out->Branch("truth_z", &v_truth_z);
   t_out->Branch("truth_adc", &v_truth_adc);
+  t_out->Branch("truth_phisize", &v_truth_phisize);
+  t_out->Branch("truth_zsize", &v_truth_zsize);
   t_out->Branch("ntruth", &v_ntruth);
 
   const Int_t nlayers_map = 3;
   const Int_t nlayers_intt = 4;
   const Int_t nlayers_tpc = 48;
+
+  Long64_t ien = 0;
+  Long64_t nentries = t_training->GetEntries();
 
   for(Int_t event = ith*nev; event < min((ith+1)*nev, max_event); event++)
     for(Int_t layer = nlayers_map + nlayers_intt; layer < nlayers_map + nlayers_intt + nlayers_tpc; layer++)
@@ -123,77 +136,75 @@ int main(int argc, const char *argv[])
       else
         li = 2;
 
-      vvF v_hit;
+      const Float_t PI = TMath::Pi();
+      const Float_t radius[3] = {(30.+40.)/2., (40.+60.)/2., (60.+77.)/2.};
+      const Float_t width_phi[3] = {2*PI/1152, 2*PI/1536, 2*PI/2304};
+      const Float_t width_z = 53. * 8. / 1000.;
+      const Float_t region_phi = nd * width_phi[li];
+      const Float_t region_z = nd * width_z;
+
       vvF v_cluster;
       vvF v_g4cluster;
-      vvF v_searched;
 
-      query(ntp_hit, "phi:z:adc", Form("event==%d && layer==%d", event, layer), v_hit);
       query(ntp_cluster, "phi:z:adc", Form("event==%d && layer==%d", event, layer), v_cluster);
-      query(ntp_g4cluster, "gphi:gz:gadc:gprimary", Form("event==%d && layer==%d", event, layer), v_g4cluster);
+      query(ntp_g4cluster, "gphi:gz:gadc:gvr:gphisize:gzsize", Form("event==%d && layer==%d", event, layer), v_g4cluster);
 
-      for(const auto &cluster : v_cluster)
-        if( find(v_searched.begin(), v_searched.end(), cluster) == v_searched.end() )
+      while(ien < nentries)
+      {
+        t_training->GetEntry(ien);
+        if(training_event < event || training_layer < layer)
         {
-          const Float_t PI = TMath::Pi();
-          const Float_t radius[3] = {(30.+40.)/2., (40.+60.)/2., (60.+77.)/2.};
-          const Float_t width_phi[3] = {2*PI/1152, 2*PI/1536, 2*PI/2304};
-          const Float_t width_z = 53. * 8. / 1000.;
-          const Float_t region_phi = nd * width_phi[li];
-          const Float_t region_z = nd * width_z;
+          ien++;
+          continue;
+        }
+        else if(training_event > event || training_layer > layer)
+        {
+          break;
+        }
+        ien++;
 
-          zr = cluster[1] / radius[li];
-          v_adc.fill(0);
-          v_reco_phi.fill(0.);
-          v_reco_z.fill(0.);
-          v_reco_adc.fill(0);
-          v_nreco.fill(0);
-          v_truth_phi.fill(0.);
-          v_truth_z.fill(0.);
-          v_truth_adc.fill(0);
-          v_ntruth.fill(0);
-          size_t counter;
+        zr = center_z / radius[li];
+        v_reco_phi.fill(0.);
+        v_reco_z.fill(0.);
+        v_reco_adc.fill(0);
+        v_nreco.fill(0);
+        v_truth_phi.fill(0.);
+        v_truth_z.fill(0.);
+        v_truth_adc.fill(0);
+        v_ntruth.fill(0);
+        size_t counter;
 
-          for(const auto &hit : v_hit)
-            if( fabs(hit[0] - cluster[0]) < region_phi &&
-                fabs(hit[1] - cluster[1]) < region_z )
-            {
-              Float_t bin_phi = round((hit[0] - cluster[0]) / width_phi[li]);
-              Float_t bin_z = round((hit[1] - cluster[1]) / width_z);
-              size_t bin_i = static_cast<size_t>((bin_phi+nd)*(2*nd+1) + (bin_z+nd));
-              v_adc[bin_i] = static_cast<Short_t>(hit[2]);
-            }
+        counter = 0;
+        for(const auto &cluster : v_cluster)
+          if( fabs(cluster[0] - center_phi) < region_phi &&
+              fabs(cluster[1] - center_z) < region_z )
+          {
+            size_t ic = min(counter++, nc - 1);
+            v_reco_phi[ic] = (cluster[0] - center_phi) / width_phi[li];
+            v_reco_z[ic] = (cluster[1] - center_z) / width_z;
+            v_reco_adc[ic] = static_cast<Short_t>(cluster[2]);
+            size_t ib = min(static_cast<size_t>(floor(cluster[2]/(400./nb))), nb - 1);
+            v_nreco[ib]++;
+          }
 
-          counter = 0;
-          for(const auto &searched : v_cluster)
-            if( fabs(searched[0] - cluster[0]) < region_phi &&
-                fabs(searched[1] - cluster[1]) < region_z )
-            {
-              size_t ic = min(counter++, nc - 1);
-              v_reco_phi[ic] = (searched[0] - cluster[0]) / width_phi[li];
-              v_reco_z[ic] = (searched[1] - cluster[1]) / width_z;
-              v_reco_adc[ic] = static_cast<Short_t>(searched[2]);
-              size_t ib = min(static_cast<size_t>(floor(searched[2]/(400./nb))), nb - 1);
-              v_nreco[ib]++;
-              v_searched.emplace_back(searched);
-            }
+        counter = 0;
+        for(const auto &g4cluster : v_g4cluster)
+          if( g4cluster[3] < 25. &&
+              fabs(g4cluster[0] - center_phi) < region_phi &&
+              fabs(g4cluster[1] - center_z) < region_z )
+          {
+            size_t ic = min(counter++, nc - 1);
+            v_truth_phi[ic] = (g4cluster[0] - center_phi) / width_phi[li];
+            v_truth_z[ic] = (g4cluster[1] - center_z) / width_z;
+            v_truth_phisize[ic] = g4cluster[4];
+            v_truth_zsize[ic] = g4cluster[5];
+            v_truth_adc[ic] = static_cast<Short_t>(g4cluster[2]);
+            size_t ib = min(static_cast<size_t>(floor(g4cluster[2]/(400./nb))), nb - 1);
+            v_ntruth[ib]++;
+          }
 
-          counter = 0;
-          for(const auto &g4cluster : v_g4cluster)
-            if( g4cluster[3] > 0.5 &&
-                fabs(g4cluster[0] - cluster[0]) < region_phi &&
-                fabs(g4cluster[1] - cluster[1]) < region_z )
-            {
-              size_t ic = min(counter++, nc - 1);
-              v_truth_phi[ic] = (g4cluster[0] - cluster[0]) / width_phi[li];
-              v_truth_z[ic] = (g4cluster[1] - cluster[1]) / width_z;
-              v_truth_adc[ic] = static_cast<Short_t>(g4cluster[2]);
-              size_t ib = min(static_cast<size_t>(floor(g4cluster[2]/(400./nb))), nb - 1);
-              v_ntruth[ib]++;
-            }
-
-          t_out->Fill();
-        } // cluster
+        t_out->Fill();
+      } // t_training
     } // event, layer
 
   f_out->Write();
