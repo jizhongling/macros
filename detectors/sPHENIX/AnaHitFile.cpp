@@ -97,11 +97,11 @@ int main(int argc, const char *argv[])
   array<Short_t, nb> v_ntruth;
 
   TTree *t_training = static_cast<TTree*>(f->Get("t_training"));
-  t_training->Branch("event", &training_event);
-  t_training->Branch("layer", &training_layer);
-  t_training->Branch("phi", &center_phi);
-  t_training->Branch("z", &center_z);
-  t_training->Branch("adc", &v_adc);
+  t_training->SetBranchAddress("event", &training_event);
+  t_training->SetBranchAddress("layer", &training_layer);
+  t_training->SetBranchAddress("phi", &center_phi);
+  t_training->SetBranchAddress("z", &center_z);
+  t_training->SetBranchAddress("adc", &v_adc);
 
   auto f_out = new TFile(Form("%s-%d.root", argv[2], ith), "RECREATE");
   auto t_out = new TTree("T", "Training data");
