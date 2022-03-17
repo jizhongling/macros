@@ -195,7 +195,7 @@ int main(int argc, const char *argv[])
 
         counter = 0;
         for(const auto &g4cluster : v_g4cluster)
-          if( g4cluster[3] < 25. &&
+          if( g4cluster[2] < 1000. && g4cluster[3] < 25. &&
               fabs(g4cluster[0] - center_phi) < region_phi &&
               fabs(g4cluster[1] - center_z) < region_z &&
               g4cluster[4] < 10. && g4cluster[5] < 10. &&
