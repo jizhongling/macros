@@ -7,7 +7,7 @@ if [ ! -f $inFile ] ; then
 fi
 
 mkdir -p $SPIN/data/sphenix/output $SPIN/data/sphenix/histos
-for i in {0..9} ; do
+for i in {0..4} ; do
   ./AnaHitFile $inFile $SPIN/data/sphenix/histos/training-$PROC $i &
 done
 wait

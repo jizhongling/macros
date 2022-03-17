@@ -73,7 +73,7 @@ int main(int argc, const char *argv[])
 
   const Int_t nev = 10;
   const Int_t ith = stoi(string(argv[3]));
-  if(ith*nev >= max_event)
+  if(ith*nev > max_event)
   {
     delete f;
     return 0;
@@ -126,7 +126,7 @@ int main(int argc, const char *argv[])
   Long64_t ien = 0;
   Long64_t nentries = t_training->GetEntries();
 
-  for(Int_t event = ith*nev; event < min((ith+1)*nev, max_event); event++)
+  for(Int_t event = ith*nev; event < min((ith+1)*nev, max_event+1); event++)
     for(Int_t layer = nlayers_map + nlayers_intt; layer < nlayers_map + nlayers_intt + nlayers_tpc; layer++)
     {
       if(layer < nlayers_map + nlayers_intt + nlayers_tpc/3)
@@ -145,6 +145,8 @@ int main(int argc, const char *argv[])
 
       vvF v_cluster;
       vvF v_g4cluster;
+      vvF v_searched_cluster;
+      vvF v_searched_g4cluster;
 
       query(ntp_cluster, "phi:z:adc", Form("event==%d && layer==%d", event, layer), v_cluster);
       query(ntp_g4cluster, "gphi:gz:gadc:gvr:gphisize:gzsize", Form("event==%d && layer==%d", event, layer), v_g4cluster);
@@ -177,7 +179,8 @@ int main(int argc, const char *argv[])
         counter = 0;
         for(const auto &cluster : v_cluster)
           if( fabs(cluster[0] - center_phi) < region_phi &&
-              fabs(cluster[1] - center_z) < region_z )
+              fabs(cluster[1] - center_z) < region_z &&
+              find(v_searched_cluster.begin(), v_searched_cluster.end(), cluster) == v_searched_cluster.end() )
           {
             size_t ic = min(counter++, nc - 1);
             v_reco_phi[ic] = (cluster[0] - center_phi) / width_phi[li];
@@ -185,13 +188,15 @@ int main(int argc, const char *argv[])
             v_reco_adc[ic] = static_cast<Short_t>(cluster[2]);
             size_t ib = min(static_cast<size_t>(floor(cluster[2]/(400./nb))), nb - 1);
             v_nreco[ib]++;
+            v_searched_cluster.emplace_back(cluster);
           }
 
         counter = 0;
         for(const auto &g4cluster : v_g4cluster)
           if( g4cluster[3] < 25. &&
               fabs(g4cluster[0] - center_phi) < region_phi &&
-              fabs(g4cluster[1] - center_z) < region_z )
+              fabs(g4cluster[1] - center_z) < region_z &&
+              find(v_searched_g4cluster.begin(), v_searched_g4cluster.end(), g4cluster) == v_searched_g4cluster.end() )
           {
             size_t ic = min(counter++, nc - 1);
             v_truth_phi[ic] = (g4cluster[0] - center_phi) / width_phi[li];
@@ -201,6 +206,7 @@ int main(int argc, const char *argv[])
             v_truth_adc[ic] = static_cast<Short_t>(g4cluster[2]);
             size_t ib = min(static_cast<size_t>(floor(g4cluster[2]/(400./nb))), nb - 1);
             v_ntruth[ib]++;
+            v_searched_g4cluster.emplace_back(g4cluster);
           }
 
         t_out->Fill();

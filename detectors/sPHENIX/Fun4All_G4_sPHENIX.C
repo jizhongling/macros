@@ -628,7 +628,7 @@ int Fun4All_G4_sPHENIX(
   // QA output
   //-----
 
-  if (Enable::QA) QA_Output(outputroot + "_qa.root");
+  if (Enable::QA) QA_Output(fullroot + "_qa" + suffix);
 
   //-----
   // Exit
