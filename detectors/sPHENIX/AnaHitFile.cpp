@@ -91,9 +91,9 @@ int main(int argc, const char *argv[])
   array<Short_t, nb> v_nreco;
   array<Float_t, nc> v_truth_phi;
   array<Float_t, nc> v_truth_z;
-  array<Short_t, nc> v_truth_adc;
   array<Float_t, nc> v_truth_phisize;
   array<Float_t, nc> v_truth_zsize;
+  array<Short_t, nc> v_truth_adc;
   array<Short_t, nb> v_ntruth;
 
   TTree *t_training = static_cast<TTree*>(f->Get("t_training"));
@@ -114,9 +114,9 @@ int main(int argc, const char *argv[])
   t_out->Branch("nreco", &v_nreco);
   t_out->Branch("truth_phi", &v_truth_phi);
   t_out->Branch("truth_z", &v_truth_z);
-  t_out->Branch("truth_adc", &v_truth_adc);
   t_out->Branch("truth_phisize", &v_truth_phisize);
   t_out->Branch("truth_zsize", &v_truth_zsize);
+  t_out->Branch("truth_adc", &v_truth_adc);
   t_out->Branch("ntruth", &v_ntruth);
 
   const Int_t nlayers_map = 3;
@@ -172,6 +172,8 @@ int main(int argc, const char *argv[])
         v_nreco.fill(0);
         v_truth_phi.fill(0.);
         v_truth_z.fill(0.);
+        v_truth_phisize.fill(0.);
+        v_truth_zsize.fill(0.);
         v_truth_adc.fill(0);
         v_ntruth.fill(0);
         size_t counter;
@@ -196,6 +198,7 @@ int main(int argc, const char *argv[])
           if( g4cluster[3] < 25. &&
               fabs(g4cluster[0] - center_phi) < region_phi &&
               fabs(g4cluster[1] - center_z) < region_z &&
+              g4cluster[4] < 10. && g4cluster[5] < 10. &&
               find(v_searched_g4cluster.begin(), v_searched_g4cluster.end(), g4cluster) == v_searched_g4cluster.end() )
           {
             size_t ic = min(counter++, nc - 1);
