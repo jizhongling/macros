@@ -261,6 +261,7 @@ void TPC_Clustering()
   // For the Tpc
   //==========
   auto tpcclusterizer = new TpcClusterizer;
+  tpcclusterizer->set_use_nn(true);
   tpcclusterizer->set_drift_velocity_scale(G4TPC::drift_velocity_scale);
   tpcclusterizer->Verbosity(verbosity);
   se->registerSubsystem(tpcclusterizer);

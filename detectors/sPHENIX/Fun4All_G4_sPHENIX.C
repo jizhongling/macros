@@ -17,7 +17,7 @@
 #include <G4_ParticleFlow.C>
 #include <G4_Production.C>
 #include <G4_TopoClusterReco.C>
-#include <../../common/G4_Tracking.C>
+#include <G4_Tracking.C>
 #include <G4_User.C>
 #include <QA.C>
 

@@ -91,8 +91,8 @@ int main(int argc, const char *argv[])
   array<Short_t, nb> v_nreco;
   array<Float_t, nc> v_truth_phi;
   array<Float_t, nc> v_truth_z;
-  array<Float_t, nc> v_truth_phisize;
-  array<Float_t, nc> v_truth_zsize;
+  array<Float_t, nc> v_truth_phicov;
+  array<Float_t, nc> v_truth_zcov;
   array<Short_t, nc> v_truth_adc;
   array<Short_t, nb> v_ntruth;
 
@@ -114,8 +114,8 @@ int main(int argc, const char *argv[])
   t_out->Branch("nreco", &v_nreco);
   t_out->Branch("truth_phi", &v_truth_phi);
   t_out->Branch("truth_z", &v_truth_z);
-  t_out->Branch("truth_phisize", &v_truth_phisize);
-  t_out->Branch("truth_zsize", &v_truth_zsize);
+  t_out->Branch("truth_phicov", &v_truth_phicov);
+  t_out->Branch("truth_zcov", &v_truth_zcov);
   t_out->Branch("truth_adc", &v_truth_adc);
   t_out->Branch("ntruth", &v_ntruth);
 
@@ -149,7 +149,7 @@ int main(int argc, const char *argv[])
       vvF v_searched_g4cluster;
 
       query(ntp_cluster, "phi:z:adc", Form("event==%d && layer==%d", event, layer), v_cluster);
-      query(ntp_g4cluster, "gphi:gz:gadc:gvr:gphisize:gzsize", Form("event==%d && layer==%d", event, layer), v_g4cluster);
+      query(ntp_g4cluster, "gphi:gz:gadc:gvr:ephi:ez", Form("event==%d && layer==%d", event, layer), v_g4cluster);
 
       while(ien < nentries)
       {
@@ -172,8 +172,8 @@ int main(int argc, const char *argv[])
         v_nreco.fill(0);
         v_truth_phi.fill(0.);
         v_truth_z.fill(0.);
-        v_truth_phisize.fill(0.);
-        v_truth_zsize.fill(0.);
+        v_truth_phicov.fill(0.);
+        v_truth_zcov.fill(0.);
         v_truth_adc.fill(0);
         v_ntruth.fill(0);
         size_t counter;
@@ -196,16 +196,16 @@ int main(int argc, const char *argv[])
         counter = 0;
         for(const auto &g4cluster : v_g4cluster)
           if( g4cluster[2] < 1000. && g4cluster[3] < 25. &&
+              g4cluster[4] < 1. && g4cluster[5] < 1. &&
               fabs(g4cluster[0] - center_phi) < region_phi &&
               fabs(g4cluster[1] - center_z) < region_z &&
-              g4cluster[4] < 10. && g4cluster[5] < 10. &&
               find(v_searched_g4cluster.begin(), v_searched_g4cluster.end(), g4cluster) == v_searched_g4cluster.end() )
           {
             size_t ic = min(counter++, nc - 1);
             v_truth_phi[ic] = (g4cluster[0] - center_phi) / width_phi[li];
             v_truth_z[ic] = (g4cluster[1] - center_z) / width_z;
-            v_truth_phisize[ic] = g4cluster[4];
-            v_truth_zsize[ic] = g4cluster[5];
+            v_truth_phicov[ic] = g4cluster[4] * g4cluster[4];
+            v_truth_zcov[ic] = g4cluster[5] * g4cluster[5];
             v_truth_adc[ic] = static_cast<Short_t>(g4cluster[2]);
             size_t ib = min(static_cast<size_t>(floor(g4cluster[2]/(400./nb))), nb - 1);
             v_ntruth[ib]++;

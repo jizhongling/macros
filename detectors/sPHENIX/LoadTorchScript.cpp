@@ -16,9 +16,9 @@ using namespace std;
 
 int main(int argc, const char *argv[])
 {
-  if(argc != 5)
+  if(argc != 6)
   {
-    cerr << "Usage: " << argv[0] << " <script-module> <type> <root-file> <ientry>" << endl;
+    cerr << "Usage: " << argv[0] << " <script-module> <type> <nout> <root-file> <ientry>" << endl;
     return 1;
   }
 
@@ -34,15 +34,16 @@ int main(int argc, const char *argv[])
     return 1;
   }
   const int type = stoi(string(argv[2]));
-  cout << "Load model " << argv[1] << " with type " << type << endl;
+  const int nout = stoi(string(argv[3]));
+  cout << "Load model " << argv[1] << " with type " << type << " and nout " << nout << endl;
 
-  auto f = new TFile(argv[3]);
+  auto f = new TFile(argv[4]);
   if(f->IsZombie())
   {
-    cerr << "Error: Cannot open file " << argv[3] << endl;
+    cerr << "Error: Cannot open file " << argv[4] << endl;
     return 1;
   }
-  cout << "Open file " << argv[3] << endl;
+  cout << "Open file " << argv[4] << endl;
 
   const size_t nd = 5;
   const size_t nc = 10;
@@ -56,6 +57,8 @@ int main(int argc, const char *argv[])
   array<Short_t, nb> v_nreco;
   array<Float_t, nc> v_truth_phi;
   array<Float_t, nc> v_truth_z;
+  array<Float_t, nc> v_truth_phisize;
+  array<Float_t, nc> v_truth_zsize;
   array<Short_t, nc> v_truth_adc;
   array<Short_t, nb> v_ntruth;
 
@@ -69,10 +72,12 @@ int main(int argc, const char *argv[])
   T->SetBranchAddress("nreco", &v_nreco);
   T->SetBranchAddress("truth_phi", &v_truth_phi);
   T->SetBranchAddress("truth_z", &v_truth_z);
+  T->SetBranchAddress("truth_phisize", &v_truth_phisize);
+  T->SetBranchAddress("truth_zsize", &v_truth_zsize);
   T->SetBranchAddress("truth_adc", &v_truth_adc);
   T->SetBranchAddress("ntruth", &v_ntruth);
 
-  T->GetEntry(stoi(string(argv[4])));
+  T->GetEntry(stoi(string(argv[5])));
 
   try
   {
@@ -91,19 +96,29 @@ int main(int argc, const char *argv[])
       int ntruth = 0;
       for(size_t i=5; i<nb; i++)
         ntruth += v_ntruth[i];
-      cout << "NN predictions: " << output.argmax(1).data_ptr<int64_t>()[0] << endl
+      cout << "NN predictions: " << output.argmax(1)[0].item<int>() << endl
         << "Truth clusters: " << ntruth << endl;
-      return 0;
     }
-    cout << "NN predictions: " << output.slice(/*dim=*/1, /*start=*/0, /*end=*/type).slice(2, 0, type) << endl
-      << "NN first (phi, z): " << output.data_ptr<float>()[0] << ", " << output.data_ptr<float>()[type] << endl;
+    else if(type == 1)
+    {
+      output = output.round().clamp(-(float)nd, (float)nd);
+      cout << "NN (phi,z): ";
+      for(int i=0; i<nout; i++)
+        cout << "(" << output[0][0][i].item<float>() << ", " << output[0][1][i].item<float>() << "), ";
+      cout << endl;
 
-    at::Tensor truth_phi = torch::from_blob(vector<Short_t>(v_ntruth.begin(), v_ntruth.end()).data(), {1, nb}, torch::kFloat32);
-    at::Tensor truth_z = torch::from_blob(vector<Float_t>(v_truth_z.begin(), v_truth_z.end()).data(), {1, nc}, torch::kFloat32);
-    cout << "Truth (phi,z): ";
-    for(size_t i=0; i<nc; i++)
-      cout << "(" << v_truth_phi[i] << ", " << v_truth_z[i] << "), ";
-    cout << endl;
+      cout << "Truth (phi,z): ";
+      for(size_t i=0; i<nc; i++)
+        cout << "(" << v_truth_phi[i] << ", " << v_truth_z[i] << "), ";
+      cout << endl;
+    }
+    else if(type <= 4)
+    {
+      cout << "NN predictions: ";
+      for(int i=0; i<nout; i++)
+        cout << output[0][i].item<float>() << ", ";
+      cout << endl;
+    }
   }
   catch(const c10::Error &e)
   {
