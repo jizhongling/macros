@@ -57,8 +57,8 @@ int main(int argc, const char *argv[])
   array<Short_t, nb> v_nreco;
   array<Float_t, nc> v_truth_phi;
   array<Float_t, nc> v_truth_z;
-  array<Float_t, nc> v_truth_phisize;
-  array<Float_t, nc> v_truth_zsize;
+  array<Float_t, nc> v_truth_phicov;
+  array<Float_t, nc> v_truth_zcov;
   array<Short_t, nc> v_truth_adc;
   array<Short_t, nb> v_ntruth;
 
@@ -72,8 +72,8 @@ int main(int argc, const char *argv[])
   T->SetBranchAddress("nreco", &v_nreco);
   T->SetBranchAddress("truth_phi", &v_truth_phi);
   T->SetBranchAddress("truth_z", &v_truth_z);
-  T->SetBranchAddress("truth_phisize", &v_truth_phisize);
-  T->SetBranchAddress("truth_zsize", &v_truth_zsize);
+  T->SetBranchAddress("truth_phicov", &v_truth_phicov);
+  T->SetBranchAddress("truth_zcov", &v_truth_zcov);
   T->SetBranchAddress("truth_adc", &v_truth_adc);
   T->SetBranchAddress("ntruth", &v_ntruth);
 
@@ -101,7 +101,7 @@ int main(int argc, const char *argv[])
     }
     else if(type == 1)
     {
-      output = output.round().clamp(-(float)nd, (float)nd);
+      output = output.clamp(-(float)nd, (float)nd);
       cout << "NN (phi,z): ";
       for(int i=0; i<nout; i++)
         cout << "(" << output[0][0][i].item<float>() << ", " << output[0][1][i].item<float>() << "), ";

@@ -149,7 +149,7 @@ int main(int argc, const char *argv[])
       vvF v_searched_g4cluster;
 
       query(ntp_cluster, "phi:z:adc", Form("event==%d && layer==%d", event, layer), v_cluster);
-      query(ntp_g4cluster, "gphi:gz:gadc:gvr:ephi:ez", Form("event==%d && layer==%d", event, layer), v_g4cluster);
+      query(ntp_g4cluster, "gphi:gz:gadc:gvr:gephi:gez", Form("event==%d && layer==%d", event, layer), v_g4cluster);
 
       while(ien < nentries)
       {
@@ -196,7 +196,7 @@ int main(int argc, const char *argv[])
         counter = 0;
         for(const auto &g4cluster : v_g4cluster)
           if( g4cluster[2] < 1000. && g4cluster[3] < 25. &&
-              g4cluster[4] < 1. && g4cluster[5] < 1. &&
+              g4cluster[4] < 10. && g4cluster[5] < 10. &&
               fabs(g4cluster[0] - center_phi) < region_phi &&
               fabs(g4cluster[1] - center_z) < region_z &&
               find(v_searched_g4cluster.begin(), v_searched_g4cluster.end(), g4cluster) == v_searched_g4cluster.end() )
