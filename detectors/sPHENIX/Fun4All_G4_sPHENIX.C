@@ -40,8 +40,8 @@ R__LOAD_LIBRARY(libfun4all.so)
 int Fun4All_G4_sPHENIX(
     const int nJob = 0,
     const int nEvents = 1,
-    const string &embed_input_file0 = "DST_TRUTH_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000003-00000.root",
-    const string &embed_input_file1 = "DST_TRKR_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000003-00000.root",
+    const string &embed_input_file0 = "DST_TRUTH_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000003-00000.root",
+    const string &embed_input_file1 = "DST_TRKR_HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000003-00000.root",
     const int skip = 0,
     const string &outputFile = "G4sPHENIX.root",
     const string &outdir = "/phenix/spin/phnxsp01/zji/data/sphenix/output")
@@ -101,7 +101,7 @@ int Fun4All_G4_sPHENIX(
   // E.g. /sphenix/sim//sim01/production/2016-07-21/single_particle/spacal2d/
   Input::EMBED = true;
   INPUTEMBED::filename[0] = fr->location(embed_input_file0);
-  //INPUTEMBED::filename[1] = fr->location(embed_input_file1);
+  INPUTEMBED::filename[1] = fr->location(embed_input_file1);
   // if you use a filelist
   //INPUTEMBED::listfile[0] = embed_input_file;
 

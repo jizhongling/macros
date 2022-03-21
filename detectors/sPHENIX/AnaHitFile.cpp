@@ -71,7 +71,7 @@ int main(int argc, const char *argv[])
   ntp_cluster->GetEntry(ntp_cluster->GetEntries()-1);
   Int_t max_event = static_cast<Int_t>(last_event);
 
-  const Int_t nev = 10;
+  const Int_t nev = 5;
   const Int_t ith = stoi(string(argv[3]));
   if(ith*nev > max_event)
   {
