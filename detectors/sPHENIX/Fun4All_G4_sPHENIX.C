@@ -34,15 +34,13 @@ R__LOAD_LIBRARY(libfun4all.so)
 // For HepMC Hijing
 // try inputFile = /sphenix/sim/sim01/sphnxpro/sHijing_HepMC/sHijing_0-12fm.dat
 
-// for ROOT Hijing
-// try inputFile = "https://www.phenix.bnl.gov/WWW/publish/phnxbld/sPHENIX/files/sPHENIX_G4Hits_sHijing_9-11fm_00000_00010.root"
-
 int Fun4All_G4_sPHENIX(
     const int nJob = 0,
     const int nEvents = 1,
-    const string &embed_input_file0 = "DST_TRUTH_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000003-00000.root",
-    const string &embed_input_file1 = "DST_TRKR_HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000003-00000.root",
+    const string &embed_input_file0 = "DST_TRUTH_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000004-00000.root",
+    const string &embed_input_file1 = "DST_TRKR_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000004-00000.root",
     const int skip = 0,
+    const string &inputFile = "https://www.phenix.bnl.gov/WWW/publish/phnxbld/sPHENIX/files/sPHENIX_G4Hits_sHijing_9-11fm_00000_00010.root",
     const string &outputFile = "G4sPHENIX.root",
     const string &outdir = "/phenix/spin/phnxsp01/zji/data/sphenix/output")
 {
@@ -77,8 +75,6 @@ int Fun4All_G4_sPHENIX(
   // 64 bit timestamp
   rc->set_uint64Flag("TIMESTAMP",12345678912345);
 
-  const string &inputFile = embed_input_file0;
-
   //===============
   // Input options
   //===============
@@ -90,7 +86,7 @@ int Fun4All_G4_sPHENIX(
   // the simulations step completely. The G4Setup macro is only loaded to get information
   // about the number of layers used for the cell reco code
   //  Input::READHITS = true;
-  INPUTREADHITS::filename[0] = fr->location(inputFile);
+  INPUTREADHITS::filename[0] = inputFile;
   // if you use a filelist
   // INPUTREADHITS::listfile[0] = inputFile;
   // Or:
@@ -129,7 +125,7 @@ int Fun4All_G4_sPHENIX(
   //Input::UPSILON_VERBOSITY = 0;
 
   //  Input::HEPMC = true;
-  INPUTHEPMC::filename = fr->location(inputFile);
+  INPUTHEPMC::filename = inputFile;
 
   // Event pile up simulation with collision rate in Hz MB collisions.
   //Input::PILEUPRATE = 100e3;
@@ -297,7 +293,7 @@ int Fun4All_G4_sPHENIX(
   Enable::TPC_CLUSTER = Enable::TPC_CELL && true;
   Enable::TPC_QA = Enable::TPC_CLUSTER && Enable::QA && true;
 
-  Enable::MICROMEGAS = false;
+  Enable::MICROMEGAS = true;
   Enable::MICROMEGAS_CELL = Enable::MICROMEGAS && true;
   Enable::MICROMEGAS_CLUSTER = Enable::MICROMEGAS_CELL && true;
   Enable::MICROMEGAS_QA = Enable::MICROMEGAS_CLUSTER && Enable::QA && true;

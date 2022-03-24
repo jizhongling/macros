@@ -53,7 +53,7 @@ foreach my $file (keys %inputfiles)
 {
   print "will copy $file\n";
   $filelocation->execute($file);
-    my @res = $filelocation->fetchrow_array();
+  my @res = $filelocation->fetchrow_array();
   $filemd5{$res[0]} = $res[1];
   $filesizes{$res[0]} = $res[2];
 }
