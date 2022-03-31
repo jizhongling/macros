@@ -8,6 +8,9 @@ set nevents = $2
 if ($fileno >= 0) then
   @ fileno += 1
 endif
+if ($fileno == 1) then
+  @ skip += 1
+endif
 
 # Construct the G4Hits DST files to access. These are MinBias 50 kHz pile up AuAu events
 set strembed0=`printf "DST_TRUTH_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000004-%05d.root" $fileno`
