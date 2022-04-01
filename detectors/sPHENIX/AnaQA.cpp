@@ -1,16 +1,12 @@
-// g++ -std=c++17 -Wall -I$OFFLINE_MAIN/include -L$OFFLINE_MAIN/lib `root-config --cflags --glibs` -o DrawQA DrawQA.cpp
+// g++ -std=c++17 -Wall -I$OFFLINE_MAIN/include -L$OFFLINE_MAIN/lib `root-config --cflags --glibs` -o AnaQA AnaQA.cpp
 #include <iostream>
 #include <map>
 #include <algorithm>
 
-#include <TMath.h>
 #include <TFile.h>
 #include <TNtuple.h>
 #include <TH1.h>
 #include <TH2.h>
-#include <TGraphAsymmErrors.h>
-#include <TCanvas.h>
-#include <TStyle.h>
 
 using namespace std;
 
@@ -24,6 +20,7 @@ int main(int argc, const char *argv[])
   const int istart = stoi(string(argv[2]));
   const int iend = stoi(string(argv[3]));
 
+  auto f_out = new TFile("results/qa.root", "RECREATE");
   TH1 *h_truth = new TH1F("h_truth","Truth tracks", 40,0.,20.);
   TH1 *h_reco = new TH1F("h_reco","Reco tracks", 40,0.,20.);
   TH1 *h_all = new TH1F("h_all","All reco tracks", 40,0.,20.);
@@ -124,33 +121,7 @@ int main(int argc, const char *argv[])
     delete f;
   } // ifile
 
-  TGraphAsymmErrors *g_eff = new TGraphAsymmErrors(h_reco, h_truth);
-  TGraphAsymmErrors *g_purity = new TGraphAsymmErrors(h_good, h_all);
-
-  TCanvas *c0 = new TCanvas("c0","c0", 200,200, 1800,600);
-  c0->Divide(3, 1);
-  gStyle->SetOptStat(0);
-
-  c0->cd(1);
-  g_eff->SetTitle("Efficiency");
-  g_eff->GetXaxis()->SetTitle("p_{T} (GeV)");
-  g_eff->GetYaxis()->SetTitle("Eff");
-  g_eff->GetYaxis()->SetRangeUser(0., 1.1);
-  g_eff->Draw("AP");
-
-  c0->cd(2);
-  g_purity->SetTitle("Purity");
-  g_purity->GetXaxis()->SetTitle("p_{T} (GeV)");
-  g_purity->GetYaxis()->SetTitle("Purity");
-  g_purity->GetYaxis()->SetRangeUser(0., 1.1);
-  g_purity->Draw("AP");
-
-  c0->cd(3);
-  h2_resol->GetXaxis()->SetTitle("p_{T} (GeV)");
-  h2_resol->GetYaxis()->SetTitle("pt/gpt");
-  h2_resol->Draw("COLZ");
-
-  c0->Print("results/QA.pdf");
-
+  f_out->Write();
+  f_out->Close();
   return 0;
 }
