@@ -51,14 +51,12 @@ int main(int argc, const char *argv[])
   Short_t li;
   Float_t zr;
   array<Short_t, (2*nd+1)*(2*nd+1)> v_adc;
-  array<Float_t, nc> v_reco_phi;
+  array<Float_t, nc> v_reco_rphi;
   array<Float_t, nc> v_reco_z;
   array<Short_t, nc> v_reco_adc;
   array<Short_t, nb> v_nreco;
-  array<Float_t, nc> v_truth_phi;
+  array<Float_t, nc> v_truth_rphi;
   array<Float_t, nc> v_truth_z;
-  array<Float_t, nc> v_truth_phicov;
-  array<Float_t, nc> v_truth_zcov;
   array<Short_t, nc> v_truth_adc;
   array<Short_t, nb> v_ntruth;
 
@@ -66,14 +64,12 @@ int main(int argc, const char *argv[])
   T->SetBranchAddress("layer", &li);
   T->SetBranchAddress("ztan", &zr);
   T->SetBranchAddress("adc", &v_adc);
-  T->SetBranchAddress("reco_phi", &v_reco_phi);
+  T->SetBranchAddress("reco_rphi", &v_reco_rphi);
   T->SetBranchAddress("reco_z", &v_reco_z);
   T->SetBranchAddress("reco_adc", &v_reco_adc);
   T->SetBranchAddress("nreco", &v_nreco);
-  T->SetBranchAddress("truth_phi", &v_truth_phi);
+  T->SetBranchAddress("truth_rphi", &v_truth_rphi);
   T->SetBranchAddress("truth_z", &v_truth_z);
-  T->SetBranchAddress("truth_phicov", &v_truth_phicov);
-  T->SetBranchAddress("truth_zcov", &v_truth_zcov);
   T->SetBranchAddress("truth_adc", &v_truth_adc);
   T->SetBranchAddress("ntruth", &v_ntruth);
 
@@ -101,15 +97,14 @@ int main(int argc, const char *argv[])
     }
     else if(type == 1)
     {
-      output = output.clamp(-(float)nd, (float)nd);
-      cout << "NN (phi,z): ";
+      cout << "NN (rphi, z): ";
       for(int i=0; i<nout; i++)
         cout << "(" << output[0][0][i].item<float>() << ", " << output[0][1][i].item<float>() << "), ";
       cout << endl;
 
-      cout << "Truth (phi,z): ";
+      cout << "Truth (rphi, z): ";
       for(size_t i=0; i<nc; i++)
-        cout << "(" << v_truth_phi[i] << ", " << v_truth_z[i] << "), ";
+        cout << "(" << v_truth_rphi[i] << ", " << v_truth_z[i] << "), ";
       cout << endl;
     }
     else if(type <= 4)
