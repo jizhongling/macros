@@ -13,6 +13,8 @@
 using namespace std;
 
 typedef vector<vector<Float_t>> vvF;
+template<class T> inline constexpr T square(const T &x) { return x*x; }
+template<class T> inline constexpr T get_r(const T &x, const T &y) { return sqrt(square(x) + square(y)); }
 
 void query(TNtuple *ntp, TString var, const char *cond, vvF &result)
 {
@@ -65,6 +67,7 @@ int main(int argc, const char *argv[])
 
   TNtuple *ntp_cluster = static_cast<TNtuple*>(f->Get("ntp_cluster"));
   TNtuple *ntp_g4cluster = static_cast<TNtuple*>(f->Get("ntp_g4cluster"));
+  TNtuple *ntp_track = static_cast<TNtuple*>(f->Get("ntp_track"));
 
   Float_t last_event;
   ntp_cluster->SetBranchAddress("event", &last_event);
@@ -93,6 +96,8 @@ int main(int argc, const char *argv[])
   array<Float_t, nc> v_truth_z;
   array<Short_t, nc> v_truth_adc;
   array<Short_t, nb> v_ntruth;
+  Float_t track_rphi;
+  Float_t track_z;
 
   TTree *t_training = static_cast<TTree*>(f->Get("t_training"));
   t_training->SetBranchAddress("event", &training_event);
@@ -115,6 +120,8 @@ int main(int argc, const char *argv[])
   t_out->Branch("truth_z", &v_truth_z);
   t_out->Branch("truth_adc", &v_truth_adc);
   t_out->Branch("ntruth", &v_ntruth);
+  t_out->Branch("track_rphi", &track_rphi);
+  t_out->Branch("track_z", &track_z);
 
   const Int_t nlayers_map = 3;
   const Int_t nlayers_intt = 4;
@@ -124,6 +131,10 @@ int main(int argc, const char *argv[])
   Long64_t nentries = t_training->GetEntries();
 
   for(Int_t event = ith*nev; event < min((ith+1)*nev, max_event+1); event++)
+  {
+    vvF v_track;
+    query(ntp_track, "px:py:pz:pcax:pcay:pcaz", Form("event==%d", event), v_track);
+
     for(Int_t layer = nlayers_map + nlayers_intt; layer < nlayers_map + nlayers_intt + nlayers_tpc; layer++)
     {
       if(layer < nlayers_map + nlayers_intt + nlayers_tpc/3)
@@ -168,6 +179,8 @@ int main(int argc, const char *argv[])
         v_truth_z.fill(0.);
         v_truth_adc.fill(0);
         v_ntruth.fill(0);
+        track_rphi = 9999.;
+        track_z = 9999.;
         size_t counter;
 
         counter = 0;
@@ -209,9 +222,50 @@ int main(int argc, const char *argv[])
           }
         }
 
+        float min_dist2 = 9999.;
+        for(const auto &track : v_track)
+        {
+          const auto px = track[0];
+          const auto py = track[1];
+          const auto pz = track[2];
+          const auto x = track[3];
+          const auto y = track[4];
+          const auto z = track[5];
+
+          const auto r = get_r(x, y);
+          const auto dr = radius - r;
+          const auto drdt = (x * px + y * py) / r;
+          const auto dxdr = px / drdt;
+          const auto dydr = py / drdt;
+          const auto dzdr = pz / drdt;
+
+          const auto trk_x = x + dr * dxdr;
+          const auto trk_y = y + dr * dydr;
+          const auto trk_z = z + dr * dzdr;
+          const auto trk_r = get_r(trk_x, trk_y);
+          const auto trk_phi = atan2(trk_y, trk_x);
+          const auto trk_rphi = trk_r * trk_phi;
+          const auto center_rphi = radius * center_phi;
+
+          float dist2 = square(trk_rphi - center_rphi) + square(trk_z - center_z);
+          if(dist2 < min_dist2)
+          {
+            min_dist2 = dist2;
+            int iphi_diff = round((trk_phi - center_phi) / width_phi[li]);
+            int iz_diff = round((trk_z - center_z) / width_z);
+            if( abs(iphi_diff) <= nd && abs(iz_diff) <= nd &&
+                v_adc[(iphi_diff+nd)*(2*nd+1)+(iz_diff+nd)] > 0 )
+            {
+              track_rphi = trk_rphi - center_rphi;
+              track_z = trk_z - center_z;
+            }
+          }
+        }
+
         t_out->Fill();
       } // t_training
-    } // event, layer
+    } // layer
+  } // event
 
   f_out->Write();
   f_out->Close();
