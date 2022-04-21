@@ -85,7 +85,7 @@ int main(int argc, const char *argv[])
   const size_t nd = 5;
   const size_t nc = 10;
   const size_t nb = 20;
-  Short_t training_event, training_layer, li;
+  Short_t training_event, training_layer, training_ntouch, training_nedge, li;
   Float_t radius, center_phi, center_z, zr;
   array<Short_t, (2*nd+1)*(2*nd+1)> v_adc;
   array<Float_t, nc> v_reco_rphi;
@@ -102,6 +102,8 @@ int main(int argc, const char *argv[])
   TTree *t_training = static_cast<TTree*>(f->Get("t_training"));
   t_training->SetBranchAddress("event", &training_event);
   t_training->SetBranchAddress("layer", &training_layer);
+  t_training->SetBranchAddress("ntouch", &training_ntouch);
+  t_training->SetBranchAddress("nedge", &training_nedge);
   t_training->SetBranchAddress("radius", &radius);
   t_training->SetBranchAddress("phi", &center_phi);
   t_training->SetBranchAddress("z", &center_z);
@@ -222,40 +224,37 @@ int main(int argc, const char *argv[])
           }
         }
 
-        float min_dist2 = 9999.;
-        for(const auto &track : v_track)
+        if(training_ntouch > 0)
         {
-          const auto px = track[0];
-          const auto py = track[1];
-          const auto pz = track[2];
-          const auto x = track[3];
-          const auto y = track[4];
-          const auto z = track[5];
-
-          const auto r = get_r(x, y);
-          const auto dr = radius - r;
-          const auto drdt = (x * px + y * py) / r;
-          const auto dxdr = px / drdt;
-          const auto dydr = py / drdt;
-          const auto dzdr = pz / drdt;
-
-          const auto trk_x = x + dr * dxdr;
-          const auto trk_y = y + dr * dydr;
-          const auto trk_z = z + dr * dzdr;
-          const auto trk_r = get_r(trk_x, trk_y);
-          const auto trk_phi = atan2(trk_y, trk_x);
-          const auto trk_rphi = trk_r * trk_phi;
-          const auto center_rphi = radius * center_phi;
-
-          float dist2 = square(trk_rphi - center_rphi) + square(trk_z - center_z);
-          if(dist2 < min_dist2)
+          float min_dist2 = 9999.;
+          for(const auto &track : v_track)
           {
-            min_dist2 = dist2;
-            int iphi_diff = round((trk_phi - center_phi) / width_phi[li]);
-            int iz_diff = round((trk_z - center_z) / width_z);
-            if( abs(iphi_diff) <= nd && abs(iz_diff) <= nd &&
-                v_adc[(iphi_diff+nd)*(2*nd+1)+(iz_diff+nd)] > 0 )
+            const auto px = track[0];
+            const auto py = track[1];
+            const auto pz = track[2];
+            const auto x = track[3];
+            const auto y = track[4];
+            const auto z = track[5];
+
+            const auto r = get_r(x, y);
+            const auto dr = radius - r;
+            const auto drdt = (x * px + y * py) / r;
+            const auto dxdr = px / drdt;
+            const auto dydr = py / drdt;
+            const auto dzdr = pz / drdt;
+
+            const auto trk_x = x + dr * dxdr;
+            const auto trk_y = y + dr * dydr;
+            const auto trk_z = z + dr * dzdr;
+            const auto trk_r = get_r(trk_x, trk_y);
+            const auto trk_phi = atan2(trk_y, trk_x);
+            const auto trk_rphi = trk_r * trk_phi;
+            const auto center_rphi = radius * center_phi;
+
+            float dist2 = square(trk_rphi - center_rphi) + square(trk_z - center_z);
+            if(dist2 < min_dist2)
             {
+              min_dist2 = dist2;
               track_rphi = trk_rphi - center_rphi;
               track_z = trk_z - center_z;
             }

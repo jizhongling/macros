@@ -274,7 +274,7 @@ void TPC_Clustering()
   } else {
 
     auto tpcclusterizer = new TpcClusterizer;
-  tpcclusterizer->set_use_nn(false);
+    tpcclusterizer->set_use_nn(false);
     tpcclusterizer->set_drift_velocity_scale(G4TPC::drift_velocity_scale);
     tpcclusterizer->Verbosity(verbosity);
     se->registerSubsystem(tpcclusterizer);
