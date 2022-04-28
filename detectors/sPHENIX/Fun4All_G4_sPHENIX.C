@@ -2,6 +2,7 @@
 #define MACRO_FUN4ALLG4SPHENIX_C
 
 #include <GlobalVariables.C>
+#include <g4eval/TrackEvaluation.h>
 
 #include <DisplayOn.C>
 #include <G4Setup_sPHENIX.C>
@@ -466,6 +467,12 @@ int Fun4All_G4_sPHENIX(
   if (Enable::TRACKING_TRACK)
   {
     Tracking_Reco();
+  }
+  if(true)
+  {
+    auto trackEvaluation = new TrackEvaluation;
+    trackEvaluation->set_flags(TrackEvaluation::EvalTracks);
+    se->registerSubsystem(trackEvaluation);
   }
   //-----------------
   // Global Vertexing
