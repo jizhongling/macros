@@ -1,4 +1,4 @@
-// g++ -Wall -I$OFFLINE_MAIN/include -L$OFFLINE_MAIN/lib `root-config --cflags --glibs` -o AnaHitFile AnaHitFile.cpp
+// g++ -Wall -I/phenix/plhf/zji/github/sphenix/local/include -I$OFFLINE_MAIN/include -L/phenix/plhf/zji/github/sphenix/local/lib -L$OFFLINE_MAIN/lib -lg4eval_io `root-config --cflags --glibs` -o AnaHitFile AnaHitFile.cpp
 #include <iostream>
 #include <array>
 #include <vector>
@@ -9,6 +9,8 @@
 #include <TNtuple.h>
 #include <TSQLResult.h>
 #include <TSQLRow.h>
+
+#include <g4eval/TrackEvaluationContainerv1.h>
 
 using namespace std;
 
@@ -65,14 +67,16 @@ int main(int argc, const char *argv[])
   }
   cout << "Open file " << argv[1] << endl;
 
-  TNtuple *ntp_cluster = static_cast<TNtuple*>(f->Get("ntp_cluster"));
-  TNtuple *ntp_g4cluster = static_cast<TNtuple*>(f->Get("ntp_g4cluster"));
-  TNtuple *ntp_track = static_cast<TNtuple*>(f->Get("ntp_track"));
-
   Float_t last_event;
+  TNtuple *ntp_cluster = static_cast<TNtuple*>(f->Get("ntp_cluster"));
   ntp_cluster->SetBranchAddress("event", &last_event);
   ntp_cluster->GetEntry(ntp_cluster->GetEntries()-1);
-  Int_t max_event = static_cast<Int_t>(last_event);
+
+  TrackEvaluationContainerv1::TrackStruct::List *v_tracks = nullptr;
+  TTree *t_trackeval = static_cast<TTree*>(f->Get("t_trackeval"));
+  t_trackeval->SetBranchAddress("tracks", &v_tracks);
+
+  Int_t max_event = min(static_cast<Int_t>(last_event), static_cast<Int_t>(t_trackeval->GetEntries()-1));
 
   const Int_t nev = 5;
   const Int_t ith = stoi(string(argv[3]));
@@ -87,17 +91,12 @@ int main(int argc, const char *argv[])
   const size_t nb = 20;
   Short_t training_event, training_layer, training_ntouch, training_nedge, li;
   Float_t radius, center_phi, center_z, zr;
+  Float_t track_rphi, track_z;
   array<Short_t, (2*nd+1)*(2*nd+1)> v_adc;
   array<Float_t, nc> v_reco_rphi;
   array<Float_t, nc> v_reco_z;
   array<Short_t, nc> v_reco_adc;
   array<Short_t, nb> v_nreco;
-  array<Float_t, nc> v_truth_rphi;
-  array<Float_t, nc> v_truth_z;
-  array<Short_t, nc> v_truth_adc;
-  array<Short_t, nb> v_ntruth;
-  Float_t track_rphi;
-  Float_t track_z;
 
   TTree *t_training = static_cast<TTree*>(f->Get("t_training"));
   t_training->SetBranchAddress("event", &training_event);
@@ -118,12 +117,9 @@ int main(int argc, const char *argv[])
   t_out->Branch("reco_z", &v_reco_z);
   t_out->Branch("reco_adc", &v_reco_adc);
   t_out->Branch("nreco", &v_nreco);
-  t_out->Branch("truth_rphi", &v_truth_rphi);
-  t_out->Branch("truth_z", &v_truth_z);
-  t_out->Branch("truth_adc", &v_truth_adc);
-  t_out->Branch("ntruth", &v_ntruth);
   t_out->Branch("track_rphi", &track_rphi);
   t_out->Branch("track_z", &track_z);
+  t_out->Branch("ntouch", &training_ntouch);
 
   const Int_t nlayers_map = 3;
   const Int_t nlayers_intt = 4;
@@ -134,8 +130,12 @@ int main(int argc, const char *argv[])
 
   for(Int_t event = ith*nev; event < min((ith+1)*nev, max_event+1); event++)
   {
-    vvF v_track;
-    query(ntp_track, "px:py:pz:pcax:pcay:pcaz", Form("event==%d", event), v_track);
+    t_trackeval->GetEntry(event);
+    if(!v_tracks)
+    {
+      cerr << "Event " << event << " has no v_tracks!" << endl;
+      continue;
+    }
 
     for(Int_t layer = nlayers_map + nlayers_intt; layer < nlayers_map + nlayers_intt + nlayers_tpc; layer++)
     {
@@ -151,12 +151,9 @@ int main(int argc, const char *argv[])
       const Float_t width_z = 53. * 8. / 1000.;
 
       vvF v_cluster;
-      vvF v_g4cluster;
       vvF v_searched_cluster;
-      vvF v_searched_g4cluster;
 
       query(ntp_cluster, "phi:z:adc", Form("event==%d && layer==%d", event, layer), v_cluster);
-      query(ntp_g4cluster, "gphi:gz:gadc:gvr", Form("event==%d && layer==%d", event, layer), v_g4cluster);
 
       while(ien < nentries)
       {
@@ -172,30 +169,26 @@ int main(int argc, const char *argv[])
         }
         ien++;
 
+        Float_t center_rphi = radius * center_phi;
         zr = center_z / radius;
         v_reco_rphi.fill(0.);
         v_reco_z.fill(0.);
         v_reco_adc.fill(0);
         v_nreco.fill(0);
-        v_truth_rphi.fill(0.);
-        v_truth_z.fill(0.);
-        v_truth_adc.fill(0);
-        v_ntruth.fill(0);
         track_rphi = 9999.;
         track_z = 9999.;
-        size_t counter;
 
-        counter = 0;
+        size_t counter = 0;
         for(const auto &cluster : v_cluster)
         {
-          int iphi_diff = round((cluster[0] - center_phi) / width_phi[li]);
-          int iz_diff = round((cluster[1] - center_z) / width_z);
+          Int_t iphi_diff = round((cluster[0] - center_phi) / width_phi[li]);
+          Int_t iz_diff = round((cluster[1] - center_z) / width_z);
           if( abs(iphi_diff) <= nd && abs(iz_diff) <= nd &&
               v_adc[(iphi_diff+nd)*(2*nd+1)+(iz_diff+nd)] > 0 &&
               find(v_searched_cluster.begin(), v_searched_cluster.end(), cluster) == v_searched_cluster.end() )
           {
             size_t ic = min(counter++, nc - 1);
-            v_reco_rphi[ic] = radius * (cluster[0] - center_phi);
+            v_reco_rphi[ic] = radius*cluster[0] - center_rphi;
             v_reco_z[ic] = cluster[1] - center_z;
             v_reco_adc[ic] = static_cast<Short_t>(cluster[2]);
             size_t ib = min(static_cast<size_t>(floor(cluster[2]/(400./nb))), nb - 1);
@@ -204,62 +197,47 @@ int main(int argc, const char *argv[])
           }
         }
 
-        counter = 0;
-        for(const auto &g4cluster : v_g4cluster)
+        Float_t min_dist2 = 9999.;
+        for(const auto &track : *v_tracks)
         {
-          int iphi_diff = round((g4cluster[0] - center_phi) / width_phi[li]);
-          int iz_diff = round((g4cluster[1] - center_z) / width_z);
-          if( g4cluster[3] < 25. &&
-              abs(iphi_diff) <= nd && abs(iz_diff) <= nd &&
-              v_adc[(iphi_diff+nd)*(2*nd+1)+(iz_diff+nd)] > 0 &&
-              find(v_searched_g4cluster.begin(), v_searched_g4cluster.end(), g4cluster) == v_searched_g4cluster.end() )
+          Float_t trk_px = track.px;
+          Float_t trk_py = track.py;
+          Float_t trk_pz = track.pz;
+          Float_t dca_x = track.x;
+          Float_t dca_y = track.y;
+          Float_t dca_z = track.z;
+          Float_t cir_R = track.R;
+          Float_t cir_X0 = track.X0;
+          Float_t cir_Y0 = track.Y0;
+
+          // Circle intersection
+          // math.stackexchange.com/questions/256100/how-can-i-find-the-points-at-which-two-circles-intersect?newreg=b9dc98e45b514173ae85b6dbaf4d2508
+          Float_t cir_D = sqrt(cir_X0*cir_X0 + cir_Y0*cir_Y0);
+          if(cir_D < fabs(cir_R - radius) || cir_D > fabs(cir_R + radius)) continue;
+          Float_t cir_a = (cir_R*cir_R - radius*radius) / (cir_D*cir_D);
+          Float_t cir_b = sqrt(2 * (cir_R*cir_R + radius*radius) / (cir_D*cir_D) - square((cir_R*cir_R - radius*radius) / (cir_D*cir_D)) - 1);
+          Float_t cir_sign = trk_px*cir_Y0 - trk_py*cir_X0 > 0 ? 1 : -1;
+          Float_t sec_x = (1 - cir_a) * cir_X0/2 + cir_sign * cir_b * cir_Y0/2;
+          Float_t sec_y = (1 - cir_a) * cir_Y0/2 - cir_sign * cir_b * cir_X0/2;
+
+          Float_t sec_phi = atan2(sec_x-cir_X0, sec_y-cir_Y0);
+          Float_t dca_phi = atan2(dca_x-cir_X0, dca_y-cir_Y0);
+          Float_t dphi = sec_phi - dca_phi;
+          while(dphi >= PI) dphi -= 2*PI;
+          while(dphi < -PI) dphi += 2*PI;
+          Float_t dt = fabs(dphi * cir_R) / sqrt(trk_px*trk_px + trk_py*trk_py);
+
+          Float_t trk_rphi = get_r(sec_x, sec_y) * atan2(sec_y, sec_x);
+          Float_t trk_z = dca_z + trk_pz * dt;
+
+          Float_t dist2 = square(trk_rphi - center_rphi) + square(trk_z - center_z);
+          if(dist2 < min_dist2)
           {
-            size_t ic = min(counter++, nc - 1);
-            v_truth_rphi[ic] = radius * (g4cluster[0] - center_phi);
-            v_truth_z[ic] = g4cluster[1] - center_z;
-            v_truth_adc[ic] = static_cast<Short_t>(g4cluster[2]);
-            size_t ib = min(static_cast<size_t>(floor(g4cluster[2]/(400./nb))), nb - 1);
-            v_ntruth[ib]++;
-            v_searched_g4cluster.emplace_back(g4cluster);
+            min_dist2 = dist2;
+            track_rphi = trk_rphi - center_rphi;
+            track_z = trk_z - center_z;
           }
-        }
-
-        if(training_ntouch > 0)
-        {
-          float min_dist2 = 9999.;
-          for(const auto &track : v_track)
-          {
-            const auto px = track[0];
-            const auto py = track[1];
-            const auto pz = track[2];
-            const auto x = track[3];
-            const auto y = track[4];
-            const auto z = track[5];
-
-            const auto r = get_r(x, y);
-            const auto dr = radius - r;
-            const auto drdt = (x * px + y * py) / r;
-            const auto dxdr = px / drdt;
-            const auto dydr = py / drdt;
-            const auto dzdr = pz / drdt;
-
-            const auto trk_x = x + dr * dxdr;
-            const auto trk_y = y + dr * dydr;
-            const auto trk_z = z + dr * dzdr;
-            const auto trk_r = get_r(trk_x, trk_y);
-            const auto trk_phi = atan2(trk_y, trk_x);
-            const auto trk_rphi = trk_r * trk_phi;
-            const auto center_rphi = radius * center_phi;
-
-            float dist2 = square(trk_rphi - center_rphi) + square(trk_z - center_z);
-            if(dist2 < min_dist2)
-            {
-              min_dist2 = dist2;
-              track_rphi = trk_rphi - center_rphi;
-              track_z = trk_z - center_z;
-            }
-          }
-        }
+        } // v_tracks
 
         t_out->Fill();
       } // t_training
