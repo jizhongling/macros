@@ -403,9 +403,9 @@ void Tracking_Eval(const std::string& outputfile)
   eval->do_training_eval(true);
   eval->do_hit_eval(false);  // enable to see the hits that includes the chamber physics...
   eval->do_g4hit_eval(false);
-  eval->do_gtrack_eval(false);
-  eval->do_track_eval(false);
-  eval->do_track_match(false);
+  eval->do_gtrack_eval(true);
+  eval->do_track_eval(true);
+  eval->do_track_match(true);
   eval->do_trackeval_eval(true);
   eval->do_gpoint_eval(false);
   eval->do_vertex_eval(false);

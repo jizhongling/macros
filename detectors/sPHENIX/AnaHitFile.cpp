@@ -10,6 +10,7 @@
 #include <TSQLResult.h>
 #include <TSQLRow.h>
 
+#include <trackbase/TrkrDefs.h>
 #include <g4eval/TrackEvaluationContainerv1.h>
 
 using namespace std;
@@ -89,6 +90,7 @@ int main(int argc, const char *argv[])
   const size_t nd = 5;
   const size_t nc = 10;
   const size_t nb = 20;
+  TrkrDefs::cluskey training_cluskey;
   Short_t training_event, training_layer, training_ntouch, training_nedge, li;
   Float_t radius, center_phi, center_z, zr;
   Float_t track_rphi, track_z;
@@ -100,6 +102,7 @@ int main(int argc, const char *argv[])
 
   TTree *t_training = static_cast<TTree*>(f->Get("t_training"));
   t_training->SetBranchAddress("event", &training_event);
+  t_training->SetBranchAddress("cluskey", &training_cluskey);
   t_training->SetBranchAddress("layer", &training_layer);
   t_training->SetBranchAddress("ntouch", &training_ntouch);
   t_training->SetBranchAddress("nedge", &training_nedge);
@@ -137,6 +140,11 @@ int main(int argc, const char *argv[])
       continue;
     }
 
+    vector<TrkrDefs::cluskey> v_cluskey;
+    for(const auto &track : *v_tracks)
+      for(const auto &cluster : track.clusters)
+        v_cluskey.emplace_back(cluster.key);
+
     for(Int_t layer = nlayers_map + nlayers_intt; layer < nlayers_map + nlayers_intt + nlayers_tpc; layer++)
     {
       if(layer < nlayers_map + nlayers_intt + nlayers_tpc/3)
@@ -168,6 +176,8 @@ int main(int argc, const char *argv[])
           break;
         }
         ien++;
+        if( find(v_cluskey.begin(), v_cluskey.end(), training_cluskey) == v_cluskey.end() )
+          continue;
 
         Float_t center_rphi = radius * center_phi;
         zr = center_z / radius;
