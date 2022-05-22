@@ -12,15 +12,15 @@ using namespace std;
 
 int main(int argc, const char *argv[])
 {
-  if(argc != 4)
+  if(argc != 5)
   {
-    cerr << "Usage: " << argv[0] << " <prefix> <start index> <end index>" << endl;
+    cerr << "Usage: " << argv[0] << " <prefix> <start index> <end index> <out file>" << endl;
     return 1;
   }
   const int istart = stoi(string(argv[2]));
   const int iend = stoi(string(argv[3]));
 
-  auto f_out = new TFile("results/qa.root", "RECREATE");
+  auto f_out = new TFile(argv[4], "RECREATE");
   TH1 *h_truth = new TH1F("h_truth","Truth tracks", 40,0.,20.);
   TH1 *h_reco = new TH1F("h_reco","Reco tracks", 40,0.,20.);
   TH1 *h_all = new TH1F("h_all","All reco tracks", 40,0.,20.);

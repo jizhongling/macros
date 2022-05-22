@@ -1,13 +1,11 @@
 #!/bin/bash
 
 PROC=$1
-inFile=$SPIN/data/sphenix/output/G4sPHENIX_g4svtx_eval-$PROC.root
-if [ ! -f $inFile ] ; then
-  exit 0
-fi
+PREFIX=$SPIN/data/sphenix/output/G4sPHENIX_g4svtx_eval-
 
 mkdir -p $SPIN/data/sphenix/output $SPIN/data/sphenix/histos
 for i in {0..1} ; do
-  ./AnaHitFile $inFile $SPIN/data/sphenix/histos/training-$PROC $i &
+  #./AnaHitFile $PREFIX-$PROC.root $SPIN/data/sphenix/histos/training-$PROC $i &
+  ./AnaQA $PREFIX $(( PROC*20+i*10 )) $(( PROC*20+i*10+10 )) $SPIN/data/sphenix/histos/qa-$PROC-$i.root &
 done
 wait
