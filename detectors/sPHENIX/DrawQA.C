@@ -15,9 +15,11 @@ void DrawQA()
   gStyle->SetOptStat(0);
 
   c0->cd(1);
+  gPad->SetLogx();
   g_eff->SetTitle("Efficiency");
   g_eff->GetXaxis()->SetTitle("p_{T} (GeV)");
   g_eff->GetYaxis()->SetTitle("Eff");
+  g_eff->GetXaxis()->SetRangeUser(0.3, 20.);
   g_eff->GetYaxis()->SetRangeUser(0., 1.1);
   g_eff->Draw("AP");
 
@@ -60,6 +62,7 @@ void DrawQA()
   TCanvas *c2 = new TCanvas("c2","c2", 600,600);
   gStyle->SetOptStat(0);
   gPad->SetLeftMargin(0.15);
+  g_resol->GetYaxis()->SetRangeUser(0., 0.04);
   g_resol->SetTitle("Momentum resolution");
   g_resol->GetXaxis()->SetTitle("p_{T} (GeV)");
   g_resol->GetYaxis()->SetTitle("#sigma(p_{T})/p_{T}");
