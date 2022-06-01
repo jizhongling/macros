@@ -209,47 +209,49 @@ int main(int argc, const char *argv[])
 
         Float_t min_dist2 = 9999.;
         for(const auto &track : *v_tracks)
-        {
-          Float_t trk_px = track.px;
-          Float_t trk_py = track.py;
-          Float_t trk_pz = track.pz;
-          Float_t dca_x = track.x;
-          Float_t dca_y = track.y;
-          Float_t dca_z = track.z;
-          Float_t cir_R = track.R;
-          Float_t cir_X0 = track.X0;
-          Float_t cir_Y0 = track.Y0;
-
-          // Circle intersection
-          // math.stackexchange.com/questions/256100/how-can-i-find-the-points-at-which-two-circles-intersect?newreg=b9dc98e45b514173ae85b6dbaf4d2508
-          Float_t cir_D = sqrt(cir_X0*cir_X0 + cir_Y0*cir_Y0);
-          if(cir_D < fabs(cir_R - radius) || cir_D > fabs(cir_R + radius)) continue;
-          Float_t cir_a = (cir_R*cir_R - radius*radius) / (cir_D*cir_D);
-          Float_t cir_b = sqrt(2 * (cir_R*cir_R + radius*radius) / (cir_D*cir_D) - square((cir_R*cir_R - radius*radius) / (cir_D*cir_D)) - 1);
-          Float_t cir_sign = trk_px*cir_Y0 - trk_py*cir_X0 > 0 ? 1 : -1;
-          Float_t sec_x = (1 - cir_a) * cir_X0/2 + cir_sign * cir_b * cir_Y0/2;
-          Float_t sec_y = (1 - cir_a) * cir_Y0/2 - cir_sign * cir_b * cir_X0/2;
-
-          Float_t sec_phi = atan2(sec_x-cir_X0, sec_y-cir_Y0);
-          Float_t dca_phi = atan2(dca_x-cir_X0, dca_y-cir_Y0);
-          Float_t dphi = sec_phi - dca_phi;
-          while(dphi >= PI) dphi -= 2*PI;
-          while(dphi < -PI) dphi += 2*PI;
-          Float_t dt = fabs(dphi * cir_R) / sqrt(trk_px*trk_px + trk_py*trk_py);
-
-          Float_t trk_rphi = get_r(sec_x, sec_y) * atan2(sec_y, sec_x);
-          Float_t trk_z = dca_z + trk_pz * dt;
-
-          Float_t dist2 = square(trk_rphi - center_rphi) + square(trk_z - center_z);
-          if(dist2 < min_dist2)
+          if(track.embed > 0)
           {
-            min_dist2 = dist2;
-            track_rphi = trk_rphi - center_rphi;
-            track_z = trk_z - center_z;
-          }
-        } // v_tracks
+            Float_t trk_px = track.px;
+            Float_t trk_py = track.py;
+            Float_t trk_pz = track.pz;
+            Float_t dca_x = track.x;
+            Float_t dca_y = track.y;
+            Float_t dca_z = track.z;
+            Float_t cir_R = track.R;
+            Float_t cir_X0 = track.X0;
+            Float_t cir_Y0 = track.Y0;
 
-        t_out->Fill();
+            // Circle intersection
+            // math.stackexchange.com/questions/256100/how-can-i-find-the-points-at-which-two-circles-intersect?newreg=b9dc98e45b514173ae85b6dbaf4d2508
+            Float_t cir_D = sqrt(cir_X0*cir_X0 + cir_Y0*cir_Y0);
+            if(cir_D < fabs(cir_R - radius) || cir_D > fabs(cir_R + radius)) continue;
+            Float_t cir_a = (cir_R*cir_R - radius*radius) / (cir_D*cir_D);
+            Float_t cir_b = sqrt(2 * (cir_R*cir_R + radius*radius) / (cir_D*cir_D) - square((cir_R*cir_R - radius*radius) / (cir_D*cir_D)) - 1);
+            Float_t cir_sign = trk_px*cir_Y0 - trk_py*cir_X0 > 0 ? 1 : -1;
+            Float_t sec_x = (1 - cir_a) * cir_X0/2 + cir_sign * cir_b * cir_Y0/2;
+            Float_t sec_y = (1 - cir_a) * cir_Y0/2 - cir_sign * cir_b * cir_X0/2;
+
+            Float_t sec_phi = atan2(sec_x-cir_X0, sec_y-cir_Y0);
+            Float_t dca_phi = atan2(dca_x-cir_X0, dca_y-cir_Y0);
+            Float_t dphi = sec_phi - dca_phi;
+            while(dphi >= PI) dphi -= 2*PI;
+            while(dphi < -PI) dphi += 2*PI;
+            Float_t dt = fabs(dphi * cir_R) / sqrt(trk_px*trk_px + trk_py*trk_py);
+
+            Float_t trk_rphi = get_r(sec_x, sec_y) * atan2(sec_y, sec_x);
+            Float_t trk_z = dca_z + trk_pz * dt;
+
+            Float_t dist2 = square(trk_rphi - center_rphi) + square(trk_z - center_z);
+            if(dist2 < min_dist2)
+            {
+              min_dist2 = dist2;
+              track_rphi = trk_rphi - center_rphi;
+              track_z = trk_z - center_z;
+            }
+          } // v_tracks
+
+        if(min_dist2 < 1000.)
+          t_out->Fill();
       } // t_training
     } // layer
   } // event
