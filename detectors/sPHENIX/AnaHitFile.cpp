@@ -1,5 +1,6 @@
-// g++ -Wall -I/phenix/plhf/zji/github/sphenix/local/include -I$OFFLINE_MAIN/include -L/phenix/plhf/zji/github/sphenix/local/lib -L$OFFLINE_MAIN/lib -lg4eval_io `root-config --cflags --glibs` -o AnaHitFile AnaHitFile.cpp
+// g++ -Wall -I$MYINSTALL/include -I$OFFLINE_MAIN/include -L$MYINSTALL/lib -L$OFFLINE_MAIN/lib64 -L$OFFLINE_MAIN/lib -lg4eval_io -ltrack_reco -lActsCore -lphfield -lphfield_io -lphool `root-config --cflags --glibs` -o AnaHitFile AnaHitFile.cpp
 #include <iostream>
+#include <memory>
 #include <array>
 #include <vector>
 #include <algorithm>
@@ -11,6 +12,7 @@
 #include <TSQLRow.h>
 
 #include <trackbase/TrkrDefs.h>
+#include <trackreco/ALICEKF.h>
 #include <g4eval/TrackEvaluationContainerv1.h>
 
 using namespace std;
@@ -73,9 +75,30 @@ int main(int argc, const char *argv[])
   ntp_cluster->SetBranchAddress("event", &last_event);
   ntp_cluster->GetEntry(ntp_cluster->GetEntries()-1);
 
+  Float_t g4cluster_event, g4clusterID, g4cluster_x, g4cluster_y, g4cluster_z, g4cluster_r;
+  TNtuple *ntp_g4cluster = static_cast<TNtuple*>(f->Get("ntp_g4cluster"));
+  ntp_g4cluster->SetBranchAddress("event", &g4cluster_event);
+  ntp_g4cluster->SetBranchAddress("gtrackID", &g4clusterID);
+  ntp_g4cluster->SetBranchAddress("gx", &g4cluster_x);
+  ntp_g4cluster->SetBranchAddress("gy", &g4cluster_y);
+  ntp_g4cluster->SetBranchAddress("gz", &g4cluster_z);
+  ntp_g4cluster->SetBranchAddress("gr", &g4cluster_r);
+
+  Float_t gtrack_event, gtrackID, gembed, gtrack_px, gtrack_py, gtrack_pz;
+  TNtuple *ntp_gtrack = static_cast<TNtuple*>(f->Get("ntp_gtrack"));
+  ntp_gtrack->SetBranchAddress("event", &gtrack_event);
+  ntp_gtrack->SetBranchAddress("gtrackID", &gtrackID);
+  ntp_gtrack->SetBranchAddress("gembed", &gembed);
+  ntp_gtrack->SetBranchAddress("gpx", &gtrack_px);
+  ntp_gtrack->SetBranchAddress("gpy", &gtrack_py);
+  ntp_gtrack->SetBranchAddress("gpz", &gtrack_pz);
+
   TrackEvaluationContainerv1::TrackStruct::List *v_tracks = nullptr;
   TTree *t_trackeval = static_cast<TTree*>(f->Get("t_trackeval"));
   t_trackeval->SetBranchAddress("tracks", &v_tracks);
+
+  auto v_gtracks = make_unique<TrackEvaluationContainerv1::TrackStruct::List>();
+  auto fitter = make_unique<ALICEKF>(nullptr, nullptr, 0, 0, 0, 0);
 
   Int_t max_event = min(static_cast<Int_t>(last_event), static_cast<Int_t>(t_trackeval->GetEntries()-1));
 
@@ -128,8 +151,12 @@ int main(int argc, const char *argv[])
   const Int_t nlayers_intt = 4;
   const Int_t nlayers_tpc = 48;
 
-  Long64_t ien = 0;
-  Long64_t nentries = t_training->GetEntries();
+  Long64_t ien_training = 0;
+  Long64_t nen_training = t_training->GetEntries();
+  Long64_t ien_g4cluster = 0;
+  Long64_t nen_g4cluster = ntp_g4cluster->GetEntries();
+  Long64_t ien_gtrack = 0;
+  Long64_t nen_gtrack = ntp_gtrack->GetEntries();
 
   for(Int_t event = ith*nev; event < min((ith+1)*nev, max_event+1); event++)
   {
@@ -139,6 +166,62 @@ int main(int argc, const char *argv[])
       cerr << "Event " << event << " has no v_tracks!" << endl;
       continue;
     }
+
+    while(ien_gtrack < nen_gtrack)
+    {
+      ntp_gtrack->GetEntry(ien_gtrack);
+      if(gtrack_event < event)
+      {
+        ien_gtrack++;
+        continue;
+      }
+      else if(gtrack_event > event)
+      {
+        break;
+      }
+      ien_gtrack++;
+      if(gtrackID <= 0 || gembed <= 0)
+        continue;
+
+      vector<pair<Double_t, Double_t>> xy_pts;
+      vector<pair<Double_t, Double_t>> rz_pts;
+      while(ien_g4cluster < nen_g4cluster)
+      {
+        ntp_g4cluster->GetEntry(ien_g4cluster);
+        if(g4cluster_event < event)
+        {
+          ien_g4cluster++;
+          continue;
+        }
+        else if(g4cluster_event > event)
+        {
+          break;
+        }
+        ien_g4cluster++;
+        if(g4clusterID == gtrackID)
+        {
+          xy_pts.emplace_back(make_pair(g4cluster_x, g4cluster_y));
+          rz_pts.emplace_back(make_pair(g4cluster_r, g4cluster_z));
+        }
+      } // g4cluster
+
+      Double_t cir_R, cir_X0, cir_Y0, cir_D, lin_k, lin_b;
+      fitter->CircleFitByTaubin(xy_pts, cir_R, cir_X0, cir_Y0);
+      fitter->line_fit(rz_pts, lin_k, lin_b);
+      cir_D = sqrt(cir_X0*cir_X0 + cir_Y0*cir_Y0);
+
+      TrackEvaluationContainerv1::TrackStruct gtrack;
+      gtrack.px = gtrack_px;
+      gtrack.py = gtrack_py;
+      gtrack.pz = gtrack_pz;
+      gtrack.x = (1 - cir_R / cir_D) * cir_X0;
+      gtrack.y = (1 - cir_R / cir_D) * cir_Y0;
+      gtrack.z = lin_b;
+      gtrack.R = cir_R;
+      gtrack.X0 = cir_X0;
+      gtrack.Y0 = cir_Y0;
+      v_gtracks->emplace_back(gtrack);
+    } // gtrack
 
     vector<TrkrDefs::cluskey> v_cluskey;
     for(const auto &track : *v_tracks)
@@ -163,19 +246,19 @@ int main(int argc, const char *argv[])
 
       query(ntp_cluster, "phi:z:adc", Form("event==%d && layer==%d", event, layer), v_cluster);
 
-      while(ien < nentries)
+      while(ien_training < nen_training)
       {
-        t_training->GetEntry(ien);
+        t_training->GetEntry(ien_training);
         if(training_event < event || training_layer < layer)
         {
-          ien++;
+          ien_training++;
           continue;
         }
         else if(training_event > event || training_layer > layer)
         {
           break;
         }
-        ien++;
+        ien_training++;
         if( find(v_cluskey.begin(), v_cluskey.end(), training_cluskey) == v_cluskey.end() )
           continue;
 
@@ -208,47 +291,46 @@ int main(int argc, const char *argv[])
         }
 
         Float_t min_dist2 = 9999.;
-        for(const auto &track : *v_tracks)
-          if(track.embed > 0)
+        for(const auto &gtrack : *v_gtracks)
+        {
+          Float_t trk_px = gtrack.px;
+          Float_t trk_py = gtrack.py;
+          Float_t trk_pz = gtrack.pz;
+          Float_t dca_x = gtrack.x;
+          Float_t dca_y = gtrack.y;
+          Float_t dca_z = gtrack.z;
+          Float_t cir_R = gtrack.R;
+          Float_t cir_X0 = gtrack.X0;
+          Float_t cir_Y0 = gtrack.Y0;
+
+          // Circle intersection
+          // math.stackexchange.com/questions/256100/how-can-i-find-the-points-at-which-two-circles-intersect?newreg=b9dc98e45b514173ae85b6dbaf4d2508
+          Float_t cir_D = sqrt(cir_X0*cir_X0 + cir_Y0*cir_Y0);
+          if(cir_D < fabs(cir_R - radius) || cir_D > fabs(cir_R + radius)) continue;
+          Float_t cir_a = (cir_R*cir_R - radius*radius) / (cir_D*cir_D);
+          Float_t cir_b = sqrt(2 * (cir_R*cir_R + radius*radius) / (cir_D*cir_D) - square((cir_R*cir_R - radius*radius) / (cir_D*cir_D)) - 1);
+          Float_t cir_sign = trk_px*cir_Y0 - trk_py*cir_X0 > 0 ? 1 : -1;
+          Float_t sec_x = (1 - cir_a) * cir_X0/2 + cir_sign * cir_b * cir_Y0/2;
+          Float_t sec_y = (1 - cir_a) * cir_Y0/2 - cir_sign * cir_b * cir_X0/2;
+
+          Float_t sec_phi = atan2(sec_x-cir_X0, sec_y-cir_Y0);
+          Float_t dca_phi = atan2(dca_x-cir_X0, dca_y-cir_Y0);
+          Float_t dphi = sec_phi - dca_phi;
+          while(dphi >= PI) dphi -= 2*PI;
+          while(dphi < -PI) dphi += 2*PI;
+          Float_t dt = fabs(dphi * cir_R) / sqrt(trk_px*trk_px + trk_py*trk_py);
+
+          Float_t trk_rphi = get_r(sec_x, sec_y) * atan2(sec_y, sec_x);
+          Float_t trk_z = dca_z + trk_pz * dt;
+
+          Float_t dist2 = square(trk_rphi - center_rphi) + square(trk_z - center_z);
+          if(dist2 < min_dist2)
           {
-            Float_t trk_px = track.px;
-            Float_t trk_py = track.py;
-            Float_t trk_pz = track.pz;
-            Float_t dca_x = track.x;
-            Float_t dca_y = track.y;
-            Float_t dca_z = track.z;
-            Float_t cir_R = track.R;
-            Float_t cir_X0 = track.X0;
-            Float_t cir_Y0 = track.Y0;
-
-            // Circle intersection
-            // math.stackexchange.com/questions/256100/how-can-i-find-the-points-at-which-two-circles-intersect?newreg=b9dc98e45b514173ae85b6dbaf4d2508
-            Float_t cir_D = sqrt(cir_X0*cir_X0 + cir_Y0*cir_Y0);
-            if(cir_D < fabs(cir_R - radius) || cir_D > fabs(cir_R + radius)) continue;
-            Float_t cir_a = (cir_R*cir_R - radius*radius) / (cir_D*cir_D);
-            Float_t cir_b = sqrt(2 * (cir_R*cir_R + radius*radius) / (cir_D*cir_D) - square((cir_R*cir_R - radius*radius) / (cir_D*cir_D)) - 1);
-            Float_t cir_sign = trk_px*cir_Y0 - trk_py*cir_X0 > 0 ? 1 : -1;
-            Float_t sec_x = (1 - cir_a) * cir_X0/2 + cir_sign * cir_b * cir_Y0/2;
-            Float_t sec_y = (1 - cir_a) * cir_Y0/2 - cir_sign * cir_b * cir_X0/2;
-
-            Float_t sec_phi = atan2(sec_x-cir_X0, sec_y-cir_Y0);
-            Float_t dca_phi = atan2(dca_x-cir_X0, dca_y-cir_Y0);
-            Float_t dphi = sec_phi - dca_phi;
-            while(dphi >= PI) dphi -= 2*PI;
-            while(dphi < -PI) dphi += 2*PI;
-            Float_t dt = fabs(dphi * cir_R) / sqrt(trk_px*trk_px + trk_py*trk_py);
-
-            Float_t trk_rphi = get_r(sec_x, sec_y) * atan2(sec_y, sec_x);
-            Float_t trk_z = dca_z + trk_pz * dt;
-
-            Float_t dist2 = square(trk_rphi - center_rphi) + square(trk_z - center_z);
-            if(dist2 < min_dist2)
-            {
-              min_dist2 = dist2;
-              track_rphi = trk_rphi - center_rphi;
-              track_z = trk_z - center_z;
-            }
-          } // v_tracks
+            min_dist2 = dist2;
+            track_rphi = trk_rphi - center_rphi;
+            track_z = trk_z - center_z;
+          }
+        } // v_gtracks
 
         if(min_dist2 < 1000.)
           t_out->Fill();
