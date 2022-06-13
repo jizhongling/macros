@@ -1,4 +1,4 @@
-// g++ -Wall -I$MYINSTALL/include -I$OFFLINE_MAIN/include -L$MYINSTALL/lib -L$OFFLINE_MAIN/lib64 -L$OFFLINE_MAIN/lib -lg4eval_io -ltrack_reco -lActsCore -lphfield -lphfield_io -lphool `root-config --cflags --glibs` -o AnaHitFile AnaHitFile.cpp
+// g++ -Wall -I$MYINSTALL/include -I$OFFLINE_MAIN/include -L$MYINSTALL/lib -L$OFFLINE_MAIN/lib -lg4eval_io -ltrack_io `root-config --cflags --glibs` -o AnaHitFile AnaHitFile.cpp
 #include <iostream>
 #include <memory>
 #include <array>
@@ -12,7 +12,7 @@
 #include <TSQLRow.h>
 
 #include <trackbase/TrkrDefs.h>
-#include <trackreco/ALICEKF.h>
+#include <trackbase/TrackFitUtils.h>
 #include <g4eval/TrackEvaluationContainerv1.h>
 
 using namespace std;
@@ -75,20 +75,21 @@ int main(int argc, const char *argv[])
   ntp_cluster->SetBranchAddress("event", &last_event);
   ntp_cluster->GetEntry(ntp_cluster->GetEntries()-1);
 
-  Float_t g4cluster_event, g4clusterID, g4cluster_x, g4cluster_y, g4cluster_z, g4cluster_r;
+  Float_t g4cluster_event, g4cluster_ID, g4cluster_embed, g4cluster_x, g4cluster_y, g4cluster_z, g4cluster_r;
   TNtuple *ntp_g4cluster = static_cast<TNtuple*>(f->Get("ntp_g4cluster"));
   ntp_g4cluster->SetBranchAddress("event", &g4cluster_event);
-  ntp_g4cluster->SetBranchAddress("gtrackID", &g4clusterID);
+  ntp_g4cluster->SetBranchAddress("gtrackID", &g4cluster_ID);
+  ntp_g4cluster->SetBranchAddress("gembed", &g4cluster_embed);
   ntp_g4cluster->SetBranchAddress("gx", &g4cluster_x);
   ntp_g4cluster->SetBranchAddress("gy", &g4cluster_y);
   ntp_g4cluster->SetBranchAddress("gz", &g4cluster_z);
   ntp_g4cluster->SetBranchAddress("gr", &g4cluster_r);
 
-  Float_t gtrack_event, gtrackID, gembed, gtrack_px, gtrack_py, gtrack_pz;
+  Float_t gtrack_event, gtrack_ID, gtrack_embed, gtrack_px, gtrack_py, gtrack_pz;
   TNtuple *ntp_gtrack = static_cast<TNtuple*>(f->Get("ntp_gtrack"));
   ntp_gtrack->SetBranchAddress("event", &gtrack_event);
-  ntp_gtrack->SetBranchAddress("gtrackID", &gtrackID);
-  ntp_gtrack->SetBranchAddress("gembed", &gembed);
+  ntp_gtrack->SetBranchAddress("gtrackID", &gtrack_ID);
+  ntp_gtrack->SetBranchAddress("gembed", &gtrack_embed);
   ntp_gtrack->SetBranchAddress("gpx", &gtrack_px);
   ntp_gtrack->SetBranchAddress("gpy", &gtrack_py);
   ntp_gtrack->SetBranchAddress("gpz", &gtrack_pz);
@@ -98,7 +99,6 @@ int main(int argc, const char *argv[])
   t_trackeval->SetBranchAddress("tracks", &v_tracks);
 
   auto v_gtracks = make_unique<TrackEvaluationContainerv1::TrackStruct::List>();
-  auto fitter = make_unique<ALICEKF>(nullptr, nullptr, 0, 0, 0, 0);
 
   Int_t max_event = min(static_cast<Int_t>(last_event), static_cast<Int_t>(t_trackeval->GetEntries()-1));
 
@@ -122,6 +122,10 @@ int main(int argc, const char *argv[])
   array<Float_t, nc> v_reco_z;
   array<Short_t, nc> v_reco_adc;
   array<Short_t, nb> v_nreco;
+  array<Float_t, nc> v_truth_rphi;
+  array<Float_t, nc> v_truth_z;
+  array<Short_t, nc> v_truth_adc;
+  array<Short_t, nb> v_ntruth;
 
   TTree *t_training = static_cast<TTree*>(f->Get("t_training"));
   t_training->SetBranchAddress("event", &training_event);
@@ -143,6 +147,10 @@ int main(int argc, const char *argv[])
   t_out->Branch("reco_z", &v_reco_z);
   t_out->Branch("reco_adc", &v_reco_adc);
   t_out->Branch("nreco", &v_nreco);
+  t_out->Branch("truth_rphi", &v_truth_rphi);
+  t_out->Branch("truth_z", &v_truth_z);
+  t_out->Branch("truth_adc", &v_truth_adc);
+  t_out->Branch("ntruth", &v_ntruth);
   t_out->Branch("track_rphi", &track_rphi);
   t_out->Branch("track_z", &track_z);
   t_out->Branch("ntouch", &training_ntouch);
@@ -180,11 +188,11 @@ int main(int argc, const char *argv[])
         break;
       }
       ien_gtrack++;
-      if(gtrackID <= 0 || gembed <= 0)
+      if(gtrack_ID <= 0 || gtrack_embed <= 0)
         continue;
 
-      vector<pair<Double_t, Double_t>> xy_pts;
-      vector<pair<Double_t, Double_t>> rz_pts;
+      TrackFitUtils::position_vector_t xy_pts;
+      TrackFitUtils::position_vector_t rz_pts;
       while(ien_g4cluster < nen_g4cluster)
       {
         ntp_g4cluster->GetEntry(ien_g4cluster);
@@ -198,17 +206,18 @@ int main(int argc, const char *argv[])
           break;
         }
         ien_g4cluster++;
-        if(g4clusterID == gtrackID)
+        if(g4cluster_ID == gtrack_ID)
         {
           xy_pts.emplace_back(make_pair(g4cluster_x, g4cluster_y));
           rz_pts.emplace_back(make_pair(g4cluster_r, g4cluster_z));
         }
       } // g4cluster
+      if(xy_pts.size() < 3)
+        continue;
 
-      Double_t cir_R, cir_X0, cir_Y0, cir_D, lin_k, lin_b;
-      fitter->CircleFitByTaubin(xy_pts, cir_R, cir_X0, cir_Y0);
-      fitter->line_fit(rz_pts, lin_k, lin_b);
-      cir_D = sqrt(cir_X0*cir_X0 + cir_Y0*cir_Y0);
+      auto [cir_R, cir_X0, cir_Y0] = TrackFitUtils::circle_fit_by_taubin(xy_pts);
+      auto [lin_k, lin_b] = TrackFitUtils::line_fit(rz_pts);
+      Double_t cir_D = sqrt(cir_X0*cir_X0 + cir_Y0*cir_Y0);
 
       TrackEvaluationContainerv1::TrackStruct gtrack;
       gtrack.px = gtrack_px;
@@ -242,9 +251,12 @@ int main(int argc, const char *argv[])
       const Float_t width_z = 53. * 8. / 1000.;
 
       vvF v_cluster;
+      vvF v_g4cluster;
       vvF v_searched_cluster;
+      vvF v_searched_g4cluster;
 
       query(ntp_cluster, "phi:z:adc", Form("event==%d && layer==%d", event, layer), v_cluster);
+      query(ntp_g4cluster, "gphi:gz:gadc:gprimary:gembed", Form("event==%d && layer==%d", event, layer), v_g4cluster);
 
       while(ien_training < nen_training)
       {
@@ -268,10 +280,15 @@ int main(int argc, const char *argv[])
         v_reco_z.fill(0.);
         v_reco_adc.fill(0);
         v_nreco.fill(0);
+        v_truth_rphi.fill(0.);
+        v_truth_z.fill(0.);
+        v_truth_adc.fill(0);
+        v_ntruth.fill(0);
         track_rphi = 9999.;
         track_z = 9999.;
+        size_t counter;
 
-        size_t counter = 0;
+        counter = 0;
         for(const auto &cluster : v_cluster)
         {
           Int_t iphi_diff = round((cluster[0] - center_phi) / width_phi[li]);
@@ -290,18 +307,38 @@ int main(int argc, const char *argv[])
           }
         }
 
-        Float_t min_dist2 = 9999.;
-        for(const auto &gtrack : *v_gtracks)
+        counter = 0;
+        for(const auto &g4cluster : v_g4cluster)
         {
-          Float_t trk_px = gtrack.px;
-          Float_t trk_py = gtrack.py;
-          Float_t trk_pz = gtrack.pz;
-          Float_t dca_x = gtrack.x;
-          Float_t dca_y = gtrack.y;
-          Float_t dca_z = gtrack.z;
-          Float_t cir_R = gtrack.R;
-          Float_t cir_X0 = gtrack.X0;
-          Float_t cir_Y0 = gtrack.Y0;
+          Int_t iphi_diff = round((g4cluster[0] - center_phi) / width_phi[li]);
+          Int_t iz_diff = round((g4cluster[1] - center_z) / width_z);
+          if( g4cluster[3] > 0 && g4cluster[4] > 0 &&
+              abs(iphi_diff) <= nd && abs(iz_diff) <= nd &&
+              v_adc[(iphi_diff+nd)*(2*nd+1)+(iz_diff+nd)] > 0 &&
+              find(v_searched_g4cluster.begin(), v_searched_g4cluster.end(), g4cluster) == v_searched_g4cluster.end() )
+          {
+            size_t ic = min(counter++, nc - 1);
+            v_truth_rphi[ic] = radius*g4cluster[0] - center_rphi;
+            v_truth_z[ic] = g4cluster[1] - center_z;
+            v_truth_adc[ic] = static_cast<Short_t>(g4cluster[2]);
+            size_t ib = min(static_cast<size_t>(floor(g4cluster[2]/(400./nb))), nb - 1);
+            v_ntruth[ib]++;
+            v_searched_g4cluster.emplace_back(g4cluster);
+          }
+        }
+
+        Float_t min_dist2 = 9999.;
+        for(const auto &track : *v_gtracks)
+        {
+          Float_t trk_px = track.px;
+          Float_t trk_py = track.py;
+          Float_t trk_pz = track.pz;
+          Float_t dca_x = track.x;
+          Float_t dca_y = track.y;
+          Float_t dca_z = track.z;
+          Float_t cir_R = track.R;
+          Float_t cir_X0 = track.X0;
+          Float_t cir_Y0 = track.Y0;
 
           // Circle intersection
           // math.stackexchange.com/questions/256100/how-can-i-find-the-points-at-which-two-circles-intersect?newreg=b9dc98e45b514173ae85b6dbaf4d2508
