@@ -116,13 +116,13 @@ int main(int argc, const char *argv[])
   TrkrDefs::cluskey training_cluskey;
   Short_t training_event, training_layer, training_ntouch, training_nedge, li;
   Float_t radius, center_phi, center_z, zr;
-  Float_t track_rphi, track_z;
+  Float_t track_phi, track_z;
   array<Short_t, (2*nd+1)*(2*nd+1)> v_adc;
-  array<Float_t, nc> v_reco_rphi;
+  array<Float_t, nc> v_reco_phi;
   array<Float_t, nc> v_reco_z;
   array<Short_t, nc> v_reco_adc;
   array<Short_t, nb> v_nreco;
-  array<Float_t, nc> v_truth_rphi;
+  array<Float_t, nc> v_truth_phi;
   array<Float_t, nc> v_truth_z;
   array<Short_t, nc> v_truth_adc;
   array<Short_t, nb> v_ntruth;
@@ -143,15 +143,15 @@ int main(int argc, const char *argv[])
   t_out->Branch("layer", &li);
   t_out->Branch("ztan", &zr);
   t_out->Branch("adc", &v_adc);
-  t_out->Branch("reco_rphi", &v_reco_rphi);
+  t_out->Branch("reco_phi", &v_reco_phi);
   t_out->Branch("reco_z", &v_reco_z);
   t_out->Branch("reco_adc", &v_reco_adc);
   t_out->Branch("nreco", &v_nreco);
-  t_out->Branch("truth_rphi", &v_truth_rphi);
+  t_out->Branch("truth_phi", &v_truth_phi);
   t_out->Branch("truth_z", &v_truth_z);
   t_out->Branch("truth_adc", &v_truth_adc);
   t_out->Branch("ntruth", &v_ntruth);
-  t_out->Branch("track_rphi", &track_rphi);
+  t_out->Branch("track_phi", &track_phi);
   t_out->Branch("track_z", &track_z);
   t_out->Branch("ntouch", &training_ntouch);
 
@@ -274,32 +274,33 @@ int main(int argc, const char *argv[])
         if( find(v_cluskey.begin(), v_cluskey.end(), training_cluskey) == v_cluskey.end() )
           continue;
 
-        Float_t center_rphi = radius * center_phi;
         zr = center_z / radius;
-        v_reco_rphi.fill(0.);
+        v_reco_phi.fill(0.);
         v_reco_z.fill(0.);
         v_reco_adc.fill(0);
         v_nreco.fill(0);
-        v_truth_rphi.fill(0.);
+        v_truth_phi.fill(0.);
         v_truth_z.fill(0.);
         v_truth_adc.fill(0);
         v_ntruth.fill(0);
-        track_rphi = 9999.;
+        track_phi = 9999.;
         track_z = 9999.;
         size_t counter;
 
         counter = 0;
         for(const auto &cluster : v_cluster)
         {
-          Int_t iphi_diff = round((cluster[0] - center_phi) / width_phi[li]);
-          Int_t iz_diff = round((cluster[1] - center_z) / width_z);
+          Float_t phi_diff = (cluster[0] - center_phi) / width_phi[li];
+          Float_t z_diff = (cluster[1] - center_z) / width_z;
+          Int_t iphi_diff = round(phi_diff);
+          Int_t iz_diff = round(z_diff);
           if( abs(iphi_diff) <= nd && abs(iz_diff) <= nd &&
               v_adc[(iphi_diff+nd)*(2*nd+1)+(iz_diff+nd)] > 0 &&
               find(v_searched_cluster.begin(), v_searched_cluster.end(), cluster) == v_searched_cluster.end() )
           {
             size_t ic = min(counter++, nc - 1);
-            v_reco_rphi[ic] = radius*cluster[0] - center_rphi;
-            v_reco_z[ic] = cluster[1] - center_z;
+            v_reco_phi[ic] = phi_diff;
+            v_reco_z[ic] = z_diff;
             v_reco_adc[ic] = static_cast<Short_t>(cluster[2]);
             size_t ib = min(static_cast<size_t>(floor(cluster[2]/(400./nb))), nb - 1);
             v_nreco[ib]++;
@@ -310,16 +311,18 @@ int main(int argc, const char *argv[])
         counter = 0;
         for(const auto &g4cluster : v_g4cluster)
         {
-          Int_t iphi_diff = round((g4cluster[0] - center_phi) / width_phi[li]);
-          Int_t iz_diff = round((g4cluster[1] - center_z) / width_z);
+          Float_t phi_diff = (g4cluster[0] - center_phi) / width_phi[li];
+          Float_t z_diff = (g4cluster[1] - center_z) / width_z;
+          Int_t iphi_diff = round(phi_diff);
+          Int_t iz_diff = round(z_diff);
           if( g4cluster[3] > 0 && g4cluster[4] > 0 &&
               abs(iphi_diff) <= nd && abs(iz_diff) <= nd &&
               v_adc[(iphi_diff+nd)*(2*nd+1)+(iz_diff+nd)] > 0 &&
               find(v_searched_g4cluster.begin(), v_searched_g4cluster.end(), g4cluster) == v_searched_g4cluster.end() )
           {
             size_t ic = min(counter++, nc - 1);
-            v_truth_rphi[ic] = radius*g4cluster[0] - center_rphi;
-            v_truth_z[ic] = g4cluster[1] - center_z;
+            v_truth_phi[ic] = phi_diff;
+            v_truth_z[ic] = z_diff;
             v_truth_adc[ic] = static_cast<Short_t>(g4cluster[2]);
             size_t ib = min(static_cast<size_t>(floor(g4cluster[2]/(400./nb))), nb - 1);
             v_ntruth[ib]++;
@@ -357,15 +360,17 @@ int main(int argc, const char *argv[])
           while(dphi < -PI) dphi += 2*PI;
           Float_t dt = fabs(dphi * cir_R) / sqrt(trk_px*trk_px + trk_py*trk_py);
 
-          Float_t trk_rphi = get_r(sec_x, sec_y) * atan2(sec_y, sec_x);
+          Float_t trk_phi = atan2(sec_y, sec_x);
           Float_t trk_z = dca_z + trk_pz * dt;
 
-          Float_t dist2 = square(trk_rphi - center_rphi) + square(trk_z - center_z);
+          Float_t phi_diff = (trk_phi - center_phi) / width_phi[li];
+          Float_t z_diff = (trk_z - center_z) / width_z;
+          Float_t dist2 = square(phi_diff) + square(z_diff);
           if(dist2 < min_dist2)
           {
             min_dist2 = dist2;
-            track_rphi = trk_rphi - center_rphi;
-            track_z = trk_z - center_z;
+            track_phi = phi_diff;
+            track_z = z_diff;
           }
         } // v_gtracks
 

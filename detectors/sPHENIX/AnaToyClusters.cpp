@@ -240,11 +240,11 @@ int main(int argc, const char *argv[])
   Short_t training_ntouch, li;
   Float_t zr;
   array<Short_t, (2*nd+1)*(2*nd+1)> v_adc;
-  array<Float_t, nc> v_reco_rphi;
+  array<Float_t, nc> v_reco_phi;
   array<Float_t, nc> v_reco_z;
   array<Short_t, nc> v_reco_adc;
   array<Short_t, nb> v_nreco;
-  array<Float_t, nc> v_truth_rphi;
+  array<Float_t, nc> v_truth_phi;
   array<Float_t, nc> v_truth_z;
   array<Short_t, nc> v_truth_adc;
   array<Short_t, nb> v_ntruth;
@@ -254,11 +254,11 @@ int main(int argc, const char *argv[])
   t_out->Branch("layer", &li);
   t_out->Branch("ztan", &zr);
   t_out->Branch("adc", &v_adc);
-  t_out->Branch("reco_rphi", &v_reco_rphi);
+  t_out->Branch("reco_phi", &v_reco_phi);
   t_out->Branch("reco_z", &v_reco_z);
   t_out->Branch("reco_adc", &v_reco_adc);
   t_out->Branch("nreco", &v_nreco);
-  t_out->Branch("truth_rphi", &v_truth_rphi);
+  t_out->Branch("truth_phi", &v_truth_phi);
   t_out->Branch("truth_z", &v_truth_z);
   t_out->Branch("truth_adc", &v_truth_adc);
   t_out->Branch("ntruth", &v_ntruth);
@@ -271,11 +271,11 @@ int main(int argc, const char *argv[])
     li = 0;
     zr = 0.;
     v_adc.fill(0);
-    v_reco_rphi.fill(0.);
+    v_reco_phi.fill(0.);
     v_reco_z.fill(0.);
     v_reco_adc.fill(0);
     v_nreco.fill(0);
-    v_truth_rphi.fill(0.);
+    v_truth_phi.fill(0.);
     v_truth_z.fill(0.);
     v_truth_adc.fill(0);
     v_ntruth.fill(0);
@@ -287,9 +287,10 @@ int main(int argc, const char *argv[])
     Float_t truth_peak[2];
     for(Int_t ic=0; ic<2; ic++)
     {
-      v_truth_rphi[ic] = rnd->Gaus(0, 0.8);
-      v_truth_z[ic] = rnd->Gaus(0, 0.8);
-      truth_peak[ic] = rnd->Gaus(60, 10);
+      v_truth_phi[ic] = rnd->Uniform(-0.6, 0.6);
+      v_truth_z[ic] = rnd->Gaus(0, 0.35);
+      Float_t peak = rnd->Gaus(70, 40);
+      truth_peak[ic] = peak > 10 ? peak : 10;
     }
     v_ntruth[0] = 2;
 
@@ -299,8 +300,10 @@ int main(int argc, const char *argv[])
         Short_t adc = 0;
         for(Int_t ic=0; ic<2; ic++)
         {
-          Float_t dist = sqrt( square(i - v_truth_rphi[ic]) + square(j - v_truth_z[ic]) );
-          Short_t gadc = TMath::Abs( truth_peak[ic] * TMath::Gaus(dist, 0, 1, kTRUE) * (1 + rnd->Gaus(0, 0.08)) );
+          Short_t gadc = TMath::Abs( truth_peak[ic]
+              * TMath::Gaus(i - v_truth_phi[ic], 0, 0.71, kTRUE)
+              * TMath::Gaus(j - v_truth_z[ic], 0, 1.1, kTRUE)
+              * (1 + rnd->Gaus(0, 0.08)) );
           if(gadc > 0)
             v_truth_adc[ic] += static_cast<Short_t>(round(gadc));
           adc += static_cast<Short_t>(round(TMath::Abs( gadc * (1 + rnd->Gaus(0, 0.08)) )));
@@ -339,7 +342,7 @@ int main(int argc, const char *argv[])
       // remove hits from all_hit_map
       // repeat untill all_hit_map empty
       auto [clusphi, clusz, clusadc] = calc_cluster_parameter(ihit_list);
-      v_reco_rphi[iclus] = clusphi - nd;
+      v_reco_phi[iclus] = clusphi - nd;
       v_reco_z[iclus] = clusz - nd;
       v_reco_adc[iclus] = clusadc;
 
