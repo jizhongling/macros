@@ -95,9 +95,10 @@ int main(int argc, const char *argv[])
           {
             h_reco->Fill(gpt);
             h2_resol->Fill(gpt, pt/gpt);
-            m_gid2id.insert(make_pair((int)gtrackID, (int)trackID));
           }
         }
+        if(nmaps > 2 && ntpc > 20)
+          m_gid2id.insert(make_pair((int)gtrackID, (int)trackID));
       }
 
       multimap<int, pair<int,Float_t>> m_id2gid;
