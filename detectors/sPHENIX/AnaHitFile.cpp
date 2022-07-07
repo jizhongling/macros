@@ -175,6 +175,7 @@ int main(int argc, const char *argv[])
       continue;
     }
 
+    if(false)
     while(ien_gtrack < nen_gtrack)
     {
       ntp_gtrack->GetEntry(ien_gtrack);
@@ -256,7 +257,7 @@ int main(int argc, const char *argv[])
       vvF v_searched_g4cluster;
 
       query(ntp_cluster, "phi:z:adc", Form("event==%d && layer==%d", event, layer), v_cluster);
-      query(ntp_g4cluster, "gphi:gz:gadc:gprimary:gembed", Form("event==%d && layer==%d", event, layer), v_g4cluster);
+      query(ntp_g4cluster, "gphi:gz:gadc:gvr", Form("event==%d && layer==%d", event, layer), v_g4cluster);
 
       while(ien_training < nen_training)
       {
@@ -315,7 +316,7 @@ int main(int argc, const char *argv[])
           Float_t z_diff = (g4cluster[1] - center_z) / width_z;
           Int_t iphi_diff = round(phi_diff);
           Int_t iz_diff = round(z_diff);
-          if( g4cluster[3] > 0 && g4cluster[4] > 0 &&
+          if( g4cluster[3] < 25. &&
               abs(iphi_diff) <= nd && abs(iz_diff) <= nd &&
               v_adc[(iphi_diff+nd)*(2*nd+1)+(iz_diff+nd)] > 0 &&
               find(v_searched_g4cluster.begin(), v_searched_g4cluster.end(), g4cluster) == v_searched_g4cluster.end() )
@@ -329,6 +330,9 @@ int main(int argc, const char *argv[])
             v_searched_g4cluster.emplace_back(g4cluster);
           }
         }
+
+        t_out->Fill();
+        continue;
 
         Float_t min_dist2 = 9999.;
         for(const auto &track : *v_gtracks)
