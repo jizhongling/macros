@@ -115,7 +115,7 @@ int main(int argc, const char *argv[])
   const size_t nb = 20;
   TrkrDefs::cluskey training_cluskey;
   Short_t training_event, training_layer, training_ntouch, training_nedge, li;
-  Float_t radius, center_phi, center_z, zr;
+  Float_t radius, center_phi, center_z, zr, training_phistep, training_zstep;
   Float_t track_phi, track_z;
   array<Short_t, (2*nd+1)*(2*nd+1)> v_adc;
   array<Float_t, nc> v_reco_phi;
@@ -136,6 +136,8 @@ int main(int argc, const char *argv[])
   t_training->SetBranchAddress("radius", &radius);
   t_training->SetBranchAddress("phi", &center_phi);
   t_training->SetBranchAddress("z", &center_z);
+  t_training->SetBranchAddress("phistep", &training_phistep);
+  t_training->SetBranchAddress("zstep", &training_zstep);
   t_training->SetBranchAddress("adc", &v_adc);
 
   auto f_out = new TFile(Form("%s-%d.root", argv[2], ith), "RECREATE");
@@ -175,8 +177,7 @@ int main(int argc, const char *argv[])
       continue;
     }
 
-    if(false)
-    while(ien_gtrack < nen_gtrack)
+    if(false) while(ien_gtrack < nen_gtrack)
     {
       ntp_gtrack->GetEntry(ien_gtrack);
       if(gtrack_event < event)
@@ -248,8 +249,6 @@ int main(int argc, const char *argv[])
         li = 2;
 
       const Float_t PI = TMath::Pi();
-      const Float_t width_phi[3] = {2*PI/1152, 2*PI/1536, 2*PI/2304};
-      const Float_t width_z = 53. * 8. / 1000.;
 
       vvF v_cluster;
       vvF v_g4cluster;
@@ -291,8 +290,8 @@ int main(int argc, const char *argv[])
         counter = 0;
         for(const auto &cluster : v_cluster)
         {
-          Float_t phi_diff = (cluster[0] - center_phi) / width_phi[li];
-          Float_t z_diff = (cluster[1] - center_z) / width_z;
+          Float_t phi_diff = (cluster[0] - center_phi) / training_phistep;
+          Float_t z_diff = (cluster[1] - center_z) / training_zstep;
           Int_t iphi_diff = round(phi_diff);
           Int_t iz_diff = round(z_diff);
           if( abs(iphi_diff) <= nd && abs(iz_diff) <= nd &&
@@ -312,8 +311,8 @@ int main(int argc, const char *argv[])
         counter = 0;
         for(const auto &g4cluster : v_g4cluster)
         {
-          Float_t phi_diff = (g4cluster[0] - center_phi) / width_phi[li];
-          Float_t z_diff = (g4cluster[1] - center_z) / width_z;
+          Float_t phi_diff = (g4cluster[0] - center_phi) / training_phistep;
+          Float_t z_diff = (g4cluster[1] - center_z) / training_zstep;
           Int_t iphi_diff = round(phi_diff);
           Int_t iz_diff = round(z_diff);
           if( g4cluster[3] < 25. &&
@@ -367,8 +366,8 @@ int main(int argc, const char *argv[])
           Float_t trk_phi = atan2(sec_y, sec_x);
           Float_t trk_z = dca_z + trk_pz * dt;
 
-          Float_t phi_diff = (trk_phi - center_phi) / width_phi[li];
-          Float_t z_diff = (trk_z - center_z) / width_z;
+          Float_t phi_diff = (trk_phi - center_phi) / training_phistep;
+          Float_t z_diff = (trk_z - center_z) / training_zstep;
           Float_t dist2 = square(phi_diff) + square(z_diff);
           if(dist2 < min_dist2)
           {
