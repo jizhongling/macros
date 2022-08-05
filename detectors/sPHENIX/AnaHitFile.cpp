@@ -115,7 +115,7 @@ int main(int argc, const char *argv[])
   const size_t nb = 20;
   TrkrDefs::cluskey training_cluskey;
   Short_t training_event, training_layer, training_ntouch, training_nedge, li;
-  Float_t radius, center_phi, center_z, zr, training_phistep, training_zstep;
+  Float_t radius, center_phi, center_z, cosphi, sinphi, zr, training_phistep, training_zstep;
   Float_t track_phi, track_z;
   array<Short_t, (2*nd+1)*(2*nd+1)> v_adc;
   array<Float_t, nc> v_reco_phi;
@@ -143,6 +143,8 @@ int main(int argc, const char *argv[])
   auto f_out = new TFile(Form("%s-%d.root", argv[2], ith), "RECREATE");
   auto t_out = new TTree("T", "Training data");
   t_out->Branch("layer", &li);
+  t_out->Branch("cosphi", &cosphi);
+  t_out->Branch("sinphi", &sinphi);
   t_out->Branch("ztan", &zr);
   t_out->Branch("adc", &v_adc);
   t_out->Branch("reco_phi", &v_reco_phi);
@@ -274,6 +276,8 @@ int main(int argc, const char *argv[])
         if( find(v_cluskey.begin(), v_cluskey.end(), training_cluskey) == v_cluskey.end() )
           continue;
 
+        cosphi = cos(center_phi);
+        sinphi = sin(center_phi);
         zr = center_z / radius;
         v_reco_phi.fill(0.);
         v_reco_z.fill(0.);
