@@ -95,7 +95,7 @@ namespace G4TRACKING
   bool use_propagator = true;             // use PHSimpleKFProp for CA seeding if true
 
   // Reset cluster error
-  bool reset_clus_error = true;
+  bool reset_clus_error = false;
   bool fixed_clus_error = false;
 
   // set to false to disable adding fake surfaces (TPC, Micromegas) to MakeActsGeom
