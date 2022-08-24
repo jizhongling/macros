@@ -1,11 +1,16 @@
 void DrawQA()
 {
   auto f = new TFile("results/qa.root");
-  TH1 *h_truth = (TH1*)f->Get("h_truth");
-  TH1 *h_reco = (TH1*)f->Get("h_reco");
-  TH1 *h_all = (TH1*)f->Get("h_all");
-  TH1 *h_good = (TH1*)f->Get("h_good");
-  TH2 *h2_resol = (TH2*)f->Get("h2_resol");
+  auto h2_truth = (TH2*)f->Get("h2_truth");
+  auto h2_reco = (TH2*)f->Get("h2_reco");
+  auto h2_all = (TH2*)f->Get("h2_all");
+  auto h2_good = (TH2*)f->Get("h2_good");
+  auto h3_resol = (TH3*)f->Get("h3_resol");
+
+  auto h_truth = h2_truth->ProjectionX("h_truth", 30, -1);
+  auto h_reco = h2_reco->ProjectionX("h_reco", 30, -1);
+  auto h_all = h2_all->ProjectionX("h_all", 30, -1);
+  auto h_good = h2_good->ProjectionX("h_good", 30, -1);
 
   TGraphAsymmErrors *g_eff = new TGraphAsymmErrors(h_reco, h_truth);
   TGraphAsymmErrors *g_purity = new TGraphAsymmErrors(h_good, h_all);
@@ -42,7 +47,7 @@ void DrawQA()
   for(int ipt = 0; ipt < 40; ipt++)
   {
     c1->cd(ipt+1);
-    TH1 *h_resol = h2_resol->ProjectionY("h_resol", ipt+1,ipt+1);
+    TH1 *h_resol = h3_resol->ProjectionY("h_resol", ipt+1,ipt+1, 30,-1);
     h_resol->SetTitle(Form("p_{T}: %.1f-%.1f GeV", 0.5*ipt,0.5*(ipt+1)));
     h_resol->GetXaxis()->SetTitle("pt/gpt");
     const Double_t max = h_resol->GetMaximum();
