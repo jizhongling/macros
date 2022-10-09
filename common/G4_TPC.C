@@ -299,6 +299,7 @@ void TPC_Clustering()
     auto tpcclusterizer = new TpcClusterizer;
     tpcclusterizer->set_use_nn(true);
     tpcclusterizer->Verbosity(verbosity);
+    tpcclusterizer->set_cluster_version(G4TRACKING::cluster_version);
     tpcclusterizer->set_do_hit_association( G4TPC::DO_HIT_ASSOCIATION );
     se->registerSubsystem(tpcclusterizer);
 
@@ -308,6 +309,7 @@ void TPC_Clustering()
   {
     auto tpcclustercleaner = new TpcClusterCleaner;
     tpcclustercleaner->Verbosity(verbosity);
+    tpcclustercleaner->set_cluster_version(G4TRACKING::cluster_version);
     se->registerSubsystem(tpcclustercleaner);
   }
 
@@ -341,6 +343,7 @@ void TPC_QA()
   Fun4AllServer* se = Fun4AllServer::instance();
   QAG4SimulationTpc * qa =  new QAG4SimulationTpc;
   qa->Verbosity(verbosity);
+  qa->set_cluster_version(G4TRACKING::cluster_version);
   se->registerSubsystem(qa);
 }
 
