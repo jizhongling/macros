@@ -120,6 +120,8 @@ int main(int argc, const char *argv[])
   array<Short_t, (2*nd+1)*(2*nd+1)> v_adc;
   array<Float_t, nc> v_reco_phi;
   array<Float_t, nc> v_reco_z;
+  array<Float_t, nc> v_reco_ephi;
+  array<Float_t, nc> v_reco_ez;
   array<Short_t, nc> v_reco_adc;
   array<Short_t, nb> v_nreco;
   array<Float_t, nc> v_truth_phi;
@@ -149,6 +151,8 @@ int main(int argc, const char *argv[])
   t_out->Branch("adc", &v_adc);
   t_out->Branch("reco_phi", &v_reco_phi);
   t_out->Branch("reco_z", &v_reco_z);
+  t_out->Branch("reco_ephi", &v_reco_ephi);
+  t_out->Branch("reco_ez", &v_reco_ez);
   t_out->Branch("reco_adc", &v_reco_adc);
   t_out->Branch("nreco", &v_nreco);
   t_out->Branch("truth_phi", &v_truth_phi);
@@ -259,7 +263,7 @@ int main(int argc, const char *argv[])
       vvF v_searched_cluster;
       vvF v_searched_g4cluster;
 
-      query(ntp_cluster, "phi:z:adc", Form("event==%d && layer==%d", event, layer), v_cluster);
+      query(ntp_cluster, "phi:z:adc:ephi:ez", Form("event==%d && layer==%d", event, layer), v_cluster);
       query(ntp_g4cluster, "gphi:gz:gadc:gvr", Form("event==%d && layer==%d", event, layer), v_g4cluster);
 
       while(ien_training < nen_training)
@@ -283,6 +287,8 @@ int main(int argc, const char *argv[])
         zr = center_z / radius;
         v_reco_phi.fill(0.);
         v_reco_z.fill(0.);
+        v_reco_ephi.fill(0.);
+        v_reco_ez.fill(0.);
         v_reco_adc.fill(0);
         v_nreco.fill(0);
         v_truth_phi.fill(0.);
@@ -309,6 +315,8 @@ int main(int argc, const char *argv[])
             size_t ic = min(counter++, nc - 1);
             v_reco_phi[ic] = phi_diff;
             v_reco_z[ic] = z_diff;
+            v_reco_ephi[ic] = cluster[3];
+            v_reco_ez[ic] = cluster[4];
             v_reco_adc[ic] = static_cast<Short_t>(cluster[2]);
             size_t ib = min(static_cast<size_t>(floor(cluster[2]/(400./nb))), nb - 1);
             v_nreco[ib]++;
