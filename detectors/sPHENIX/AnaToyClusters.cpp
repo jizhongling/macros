@@ -35,7 +35,7 @@ void remove_hit(Int_t adc, Int_t phibin, Int_t zbin, multimap<Short_t, ihit> &al
   pair<hit_iterator, hit_iterator> iterpair = all_hit_map.equal_range(adc);
   hit_iterator it = iterpair.first;
   for (; it != iterpair.second; ++it) {
-    if (it->second.iphi == phibin && it->second.iz == zbin) { 
+    if (it->second.iphi == phibin && it->second.iz == zbin) {
       all_hit_map.erase(it);
       break;
     }
@@ -46,7 +46,7 @@ void remove_hit(Int_t adc, Int_t phibin, Int_t zbin, multimap<Short_t, ihit> &al
 void remove_hits(vector<ihit> &ihit_list, multimap<Short_t, ihit> &all_hit_map, vvS &adcval)
 {
   for(auto iter = ihit_list.begin(); iter != ihit_list.end();++iter){
-    Short_t adc    = iter->adc; 
+    Short_t adc    = iter->adc;
     Short_t phibin = iter->iphi;
     Short_t zbin   = iter->iz;
     remove_hit(adc,phibin,zbin,all_hit_map,adcval);
@@ -73,7 +73,7 @@ void find_z_range(Int_t phibin, Int_t zbin, const vvS &adcval, Int_t& zdown, Int
     }
     //check local minima and break at minimum.
     if(cz<NZBinsMax-4){//make sure we stay clear from the edge
-      if(adcval[phibin][cz]+adcval[phibin][cz+1] < 
+      if(adcval[phibin][cz]+adcval[phibin][cz+1] <
           adcval[phibin][cz+2]+adcval[phibin][cz+3]){//rising again
         zup = iz+1;
         touch++;
@@ -93,7 +93,7 @@ void find_z_range(Int_t phibin, Int_t zbin, const vvS &adcval, Int_t& zdown, Int
       break;
     }
     if(cz>4){//make sure we stay clear from the edge
-      if(adcval[phibin][cz]+adcval[phibin][cz-1] < 
+      if(adcval[phibin][cz]+adcval[phibin][cz-1] <
           adcval[phibin][cz-2]+adcval[phibin][cz-3]){//rising again
         zdown = iz+1;
         touch++;
@@ -126,7 +126,7 @@ void find_phi_range(Int_t phibin, Int_t zbin, const vvS &adcval, Int_t& phidown,
     }
     //check local minima and break at minimum.
     if(cphi<NPhiBinsMax-4){//make sure we stay clear from the edge
-      if(adcval[cphi][zbin]+adcval[cphi+1][zbin] < 
+      if(adcval[cphi][zbin]+adcval[cphi+1][zbin] <
           adcval[cphi+2][zbin]+adcval[cphi+3][zbin]){//rising again
         phiup = iphi+1;
         touch++;
@@ -149,7 +149,7 @@ void find_phi_range(Int_t phibin, Int_t zbin, const vvS &adcval, Int_t& phidown,
       break;
     }
     if(cphi>4){//make sure we stay clear from the edge
-      if(adcval[cphi][zbin]+adcval[cphi-1][zbin] < 
+      if(adcval[cphi][zbin]+adcval[cphi-1][zbin] <
           adcval[cphi-2][zbin]+adcval[cphi-3][zbin]){//rising again
         phidown = iphi+1;
         touch++;
@@ -206,7 +206,7 @@ tuple<Float_t, Float_t, Int_t> calc_cluster_parameter(const vector<ihit> &ihit_l
   for(auto iter = ihit_list.begin(); iter != ihit_list.end();++iter){
     Int_t iphi = iter->iphi;
     Int_t iz   = iter->iz;
-    Int_t adc = iter->adc; 
+    Int_t adc = iter->adc;
     if (adc <= 0) continue;
 
     phi_sum += iphi * adc;
@@ -215,7 +215,7 @@ tuple<Float_t, Float_t, Int_t> calc_cluster_parameter(const vector<ihit> &ihit_l
   }
   if (adc_sum < 10){
     return make_tuple(0, 0, 0);  // skip obvious noise "clusters"
-  }  
+  }
 
   // This is the global position
   Float_t clusphi = (Float_t)phi_sum / adc_sum;

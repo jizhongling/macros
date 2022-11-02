@@ -94,10 +94,6 @@ namespace G4TRACKING
   bool use_hybrid_seeding = false;                  // false for using the default PHCASeeding, true to use PHHybridSeeding (STAR core, ALICE KF)
   bool use_propagator = true;             // use PHSimpleKFProp for CA seeding if true
 
-  // Reset cluster error
-  bool reset_clus_error = false;
-  bool fixed_clus_error = false;
-
   // set to false to disable adding fake surfaces (TPC, Micromegas) to MakeActsGeom
   bool add_fake_surfaces = true;
 
@@ -314,8 +310,6 @@ void Tracking_Reco()
 	      {
 	        PHTpcTrackSeedCircleFit* vtxassoc2 = new PHTpcTrackSeedCircleFit("PrePropagatorPHTpcTrackSeedCircleFit");
 	        vtxassoc2->Verbosity(verbosity);
-	        vtxassoc2->do_reset_clus_error(G4TRACKING::reset_clus_error);
-	        vtxassoc2->set_fixed_error(G4TRACKING::fixed_clus_error);
 	        se->registerSubsystem(vtxassoc2);
 
 	        std::cout << "   Using PHSimpleKFProp propagator " << std::endl;
@@ -339,8 +333,6 @@ void Tracking_Reco()
       // It refines the phi and eta of the TPC tracklet prior to matching with the silicon tracklet
       PHTpcTrackSeedCircleFit *vtxassoc = new PHTpcTrackSeedCircleFit();
       vtxassoc->Verbosity(verbosity);
-      vtxassoc->do_reset_clus_error(G4TRACKING::reset_clus_error);
-      vtxassoc->set_fixed_error(G4TRACKING::fixed_clus_error);
       se->registerSubsystem(vtxassoc);
       
       // Choose the best duplicate TPC track seed

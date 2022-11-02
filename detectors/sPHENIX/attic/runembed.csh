@@ -16,7 +16,7 @@ cp getinputfiles.pl $datadir
 pushd $datadir
 chmod +x getinputfiles.pl
 
-# Put the DSTs into a filelist.txt 
+# Put the DSTs into a filelist.txt
 echo $strembed0 > filelist.txt
 echo $strembed1 >> filelist.txt
 

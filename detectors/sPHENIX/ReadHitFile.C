@@ -109,8 +109,8 @@ void ReadHitFile(const int nJob = 0, const int nEvents = 1)
 
   std::cout << " Success!! " << std::endl;
   // deleting the server shows if the memory is corrupted, if the job dies here - it is
-  delete se; 
-  gSystem->Exit(0);  
+  delete se;
+  gSystem->Exit(0);
 }
 
 #endif
