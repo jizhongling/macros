@@ -28,6 +28,8 @@ int main(int argc, const char *argv[])
   auto h2_all = new TH2F("h2_all","All reco tracks;p_{T} (GeV);Ntrack", 40,0.,20., 100,0.,1e5);
   auto h2_good = new TH2F("h2_good","Reco tracks with correct truth association;p_{T} (GeV);Ntrack", 40,0.,20., 100,0.,1e5);
   auto h3_resol = new TH3F("h3_resol","Momentum resolution;p_{T}^{truth} (GeV);p_{T}^{reco}/p_{T}^{truth};Ntrack", 40,0.,20., 400,0.5,1.5, 100,0.,1e5);
+  auto h3_eta = new TH3F("h3_eta","#eta resolution;p_{T}^{truth} (GeV);#Delta#eta;Ntrack", 40,0.,20., 100,-0.01,0.01, 100,0.,1e5);
+  auto h3_phi = new TH3F("h3_phi","#phi resolution;p_{T}^{truth} (GeV);#Delta#phi;Ntrack", 40,0.,20., 100,-0.01,0.01, 100,0.,1e5);
 
   for(int ifile = istart; ifile < iend; ifile++)
   {
@@ -44,8 +46,8 @@ int main(int argc, const char *argv[])
     cout << "Open file " << filename << endl;
 
     Float_t event;
-    Float_t gtrackID, gpt, gembed;
-    Float_t trackID, pt, nmaps, ntpc;
+    Float_t gtrackID, gpt, geta, gphi, gembed;
+    Float_t trackID, pt, eta, phi, nmaps, ntpc;
 
     TNtuple *ntp_gtrack = (TNtuple*)f->Get("ntp_gtrack");
     if(!ntp_gtrack || ntp_gtrack->IsZombie())
@@ -57,9 +59,13 @@ int main(int argc, const char *argv[])
     ntp_gtrack->SetBranchAddress("event", &event);
     ntp_gtrack->SetBranchAddress("gtrackID", &gtrackID);
     ntp_gtrack->SetBranchAddress("gpt", &gpt);
+    ntp_gtrack->SetBranchAddress("geta", &geta);
+    ntp_gtrack->SetBranchAddress("gphi", &gphi);
     ntp_gtrack->SetBranchAddress("gembed", &gembed);
     ntp_gtrack->SetBranchAddress("trackID", &trackID);
     ntp_gtrack->SetBranchAddress("pt", &pt);
+    ntp_gtrack->SetBranchAddress("eta", &eta);
+    ntp_gtrack->SetBranchAddress("phi", &phi);
     ntp_gtrack->SetBranchAddress("nmaps", &nmaps);
     ntp_gtrack->SetBranchAddress("ntpc", &ntpc);
 
@@ -102,6 +108,8 @@ int main(int argc, const char *argv[])
           {
             h2_reco->Fill(gpt, ntrack);
             h3_resol->Fill(gpt, pt/gpt, ntrack);
+            h3_eta->Fill(gpt, eta-geta, ntrack);
+            h3_phi->Fill(gpt, phi-gphi, ntrack);
           }
         }
         if(nmaps > 2 && ntpc > 20)
