@@ -16,6 +16,8 @@ R__LOAD_LIBRARY(libtrackeralign.so)
 #include <G4_TPC.C>
 #include <QA.C>
 
+#include <g4eval/TruthRecoTrackMatching.h>
+#include <g4eval/TrackEvaluation.h>
 #include <g4eval/SvtxEvaluator.h>
 #include <g4eval/SvtxTruthRecoTableEval.h>
 #include <g4eval/TrackSeedTrackMapConverter.h>
@@ -535,6 +537,20 @@ void Tracking_Eval(const std::string& outputfile)
   Fun4AllServer* se = Fun4AllServer::instance();
   build_truthreco_tables(); 
 
+  if(true)
+  {
+    auto trackmatcher = new TruthRecoTrackMatching(1, 0, 1.0, 0.1, 0.2, 0.2, 1.0, 1.0);
+    //trackmatcher->Verbosity(250);
+    se->registerSubsystem(trackmatcher);
+  }
+
+  if(true)
+  {
+    auto trackEvaluation = new TrackEvaluation;
+    trackEvaluation->set_flags(TrackEvaluation::EvalTracks);
+    se->registerSubsystem(trackEvaluation);
+  }
+
   //----------------
   // Tracking evaluation
   //----------------
@@ -551,7 +567,7 @@ void Tracking_Eval(const std::string& outputfile)
   eval->do_g4hit_eval(false);
   eval->do_gtrack_eval(true);
   eval->do_track_eval(true);
-  eval->do_track_match(true);
+  eval->do_track_match(false);
   eval->do_trackeval_eval(true);
   eval->do_gpoint_eval(false);
   eval->do_vertex_eval(false);
