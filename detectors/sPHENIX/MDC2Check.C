@@ -9,12 +9,11 @@ R__LOAD_LIBRARY(libfun4all.so)
 
 using namespace std;
 
-void MDC2Check(const Int_t index0 = 0, const Int_t nindex = 10)
+void MDC2Check(const Int_t runno = 62, const Int_t index0 = 0, const Int_t nindex = 10)
 {
   const Int_t ntype = 2;
   const char *prefix[ntype] = {"DST_TRUTH", "DST_TRKR_G4HIT"};
   TGraph *g_neve[ntype];
-  auto f_out = new TFile("mdc2check.root", "RECREATE");
 
   FROG *fr = new FROG();
 
@@ -23,7 +22,7 @@ void MDC2Check(const Int_t index0 = 0, const Int_t nindex = 10)
     g_neve[itype] = new TGraph(nindex);
     for(Int_t index = index0; index < index0 + nindex; index++)
     {
-      const char *fullname = fr->location(Form("%s_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000040-%05d.root", prefix[itype], index));
+      const char *fullname = fr->location(Form("%s_sHijing_0_20fm_50kHz_bkg_0_20fm-%010d-%05d.root", prefix[itype], runno, index));
       auto f = new TFile(fullname);
       auto t = static_cast<TTree*>(f->Get("T"));
       Long64_t nentries = t->GetEntries();
@@ -32,8 +31,11 @@ void MDC2Check(const Int_t index0 = 0, const Int_t nindex = 10)
     } // index
   } // itype
 
-  f_out->cd();
-  for(Int_t itype = 0; itype < ntype; itype++)
-    g_neve[itype]->Write();
-  f_out->Close();
+  if(true)
+  {
+    auto f_out = new TFile("mdc2check.root", "RECREATE");
+    for(Int_t itype = 0; itype < ntype; itype++)
+      g_neve[itype]->Write();
+    f_out->Close();
+  }
 }
