@@ -3,18 +3,12 @@
 # Input parameters
 set runno = $1
 set nevents = $2
-@ fileno = $runno * $nevents / 400
-@ skip = $runno * $nevents % 400
-if ($fileno >= 0) then
-  @ fileno += 1
-endif
-if ($fileno == 1) then
-  @ skip += 1
-endif
+@ fileno = $runno * $nevents / 350
+@ skip = $runno * $nevents % 350
 
 # Construct the G4Hits DST files to access. These are MinBias 50 kHz pile up AuAu events
-set strembed0=`printf "DST_TRUTH_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000004-%05d.root" $fileno`
-set strembed1=`printf "DST_TRKR_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000004-%05d.root" $fileno`
+set strembed0=`printf "DST_TRUTH_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000040-%05d.root" $fileno`
+set strembed1=`printf "DST_TRKR_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000040-%05d.root" $fileno`
 
 # Run my Fun4AllMacro which locates the G4Hits files by FROG
 mkdir -p $SPIN/data/sphenix/output $SPIN/data/sphenix/histos

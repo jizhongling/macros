@@ -544,7 +544,7 @@ void Tracking_Eval(const std::string& outputfile)
     se->registerSubsystem(trackmatcher);
   }
 
-  if(true)
+  if(false)
   {
     auto trackEvaluation = new TrackEvaluation;
     trackEvaluation->set_flags(TrackEvaluation::EvalTracks);

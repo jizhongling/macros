@@ -116,7 +116,7 @@ int main(int argc, const char *argv[])
   TrkrDefs::cluskey training_cluskey;
   Short_t training_event, training_layer, training_ntouch, training_nedge, li;
   Float_t radius, center_phi, center_z, cosphi, sinphi, zr, training_phistep, training_zstep;
-  Float_t truhit_phi, truhit_z, track_phi, track_z;
+  Float_t rechit_phi, rechit_z, truhit_phi, truhit_z, track_phi, track_z;
   array<Short_t, (2*nd+1)*(2*nd+1)> v_adc;
   array<Float_t, nc> v_reco_phi;
   array<Float_t, nc> v_reco_z;
@@ -159,6 +159,8 @@ int main(int argc, const char *argv[])
   t_out->Branch("truth_z", &v_truth_z);
   t_out->Branch("truth_adc", &v_truth_adc);
   t_out->Branch("ntruth", &v_ntruth);
+  t_out->Branch("rechit_phi", &rechit_phi);
+  t_out->Branch("rechit_z", &rechit_z);
   t_out->Branch("truhit_phi", &truhit_phi);
   t_out->Branch("truhit_z", &truhit_z);
   t_out->Branch("track_phi", &track_phi);
@@ -295,6 +297,8 @@ int main(int argc, const char *argv[])
         v_truth_z.fill(0.);
         v_truth_adc.fill(0);
         v_ntruth.fill(0);
+        rechit_phi = 9999.;
+        rechit_z = 9999.;
         truhit_phi = 9999.;
         truhit_z = 9999.;
         track_phi = 9999.;
@@ -350,6 +354,8 @@ int main(int argc, const char *argv[])
           for(const auto &cluster : track.clusters)
             if(cluster.key == training_cluskey)
             {
+              rechit_phi = (cluster.phi - center_phi) / training_phistep;
+              rechit_z = (cluster.z - center_z) / training_zstep;
               truhit_phi = (cluster.truth_phi - center_phi) / training_phistep;
               truhit_z = (cluster.truth_z - center_z) / training_zstep;
             }
