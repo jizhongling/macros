@@ -45,9 +45,9 @@ int Fun4All_G4_sPHENIX(
     const string &embed_input_file0 = "DST_TRUTH_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000004-00000.root",
     const string &embed_input_file1 = "DST_TRKR_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000004-00000.root",
     const int skip = 0,
+    const string &outdir = "/phenix/spin/phnxsp01/zji/data/sphenix/output",
     const string &inputFile = "https://www.phenix.bnl.gov/WWW/publish/phnxbld/sPHENIX/files/sPHENIX_G4Hits_sHijing_9-11fm_00000_00010.root",
-    const string &outputFile = "G4sPHENIX.root",
-    const string &outdir = "/phenix/spin/phnxsp01/zji/data/sphenix/output")
+    const string &outputFile = "G4sPHENIX.root")
 {
   Fun4AllServer *se = Fun4AllServer::instance();
   se->Verbosity(0);
