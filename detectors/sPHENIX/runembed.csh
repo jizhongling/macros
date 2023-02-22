@@ -6,6 +6,7 @@ set nevents = $2
 set runno = 62
 @ index = $proc * $nevents / 360
 @ skip = $proc * $nevents % 360
+@ iend = $proc + 1
 
 # Output directories
 set tree_dir = ${_CONDOR_SCRATCH_DIR}
@@ -24,3 +25,4 @@ root -l -b -q 'Fun4All_G4_sPHENIX.C('$proc', '$nevents', "'$strembed0'", "'$stre
 
 # Run the analysis code
 ./AnaHitFile $tree_dir/G4sPHENIX_g4svtx_eval-$proc.root $hist_dir/training-$proc 0 $nevents
+./AnaQA $tree_dir/G4sPHENIX_g4svtx_eval- $proc $iend $hist_dir/qa-$proc-0.root

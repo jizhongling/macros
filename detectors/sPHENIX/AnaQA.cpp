@@ -1,5 +1,6 @@
-// g++ -std=c++17 -Wall -I$OFFLINE_MAIN/include -L$OFFLINE_MAIN/lib `root-config --cflags --glibs` -o AnaQA AnaQA.cpp
+// g++ -std=c++17 -Wall -I$MYINSTALL/include -I$OFFLINE_MAIN/include -I$OFFLINE_MAIN/include -L$OFFLINE_MAIN/lib -lg4eval_io `root-config --cflags --glibs` -o AnaQA AnaQA.cpp
 #include <iostream>
+#include <tuple>
 #include <map>
 #include <algorithm>
 
@@ -9,6 +10,8 @@
 #include <TH1.h>
 #include <TH2.h>
 #include <TH3.h>
+
+#include <g4eval/TrackEvaluationContainerv1.h>
 
 using namespace std;
 
@@ -88,35 +91,34 @@ int main(int argc, const char *argv[])
     ntp_track->SetBranchAddress("gpt", &gpt);
     ntp_track->SetBranchAddress("gembed", &gembed);
     ntp_track->GetEntry(ntp_track->GetEntries()-1);
-    int max_event = (int)event;
+    Int_t last_event = static_cast<Int_t>(event);
+
+    TrackEvaluationContainerv1::TrackStruct::List *v_tracks = nullptr;
+    TTree *t_trackeval = static_cast<TTree*>(f->Get("t_trackeval"));
+    t_trackeval->SetBranchAddress("tracks", &v_tracks);
+
+    Int_t max_event = min(static_cast<Int_t>(last_event), static_cast<Int_t>(t_trackeval->GetEntries()-1));
 
     Long64_t itruth = 0, ireco = 0;
     for(int iev = 0; iev < max_event+1; iev++)
     {
       Double_t ntrack = h_ntrack->GetBinContent(iev+1);
+      multimap<int, tuple<float,float,float>> m_id;
 
-      multimap<int, int> m_gid2id;
+      t_trackeval->GetEntry(iev);
+      for(const auto &track : *v_tracks)
+        if(track.gtrackID > 0 && track.embed > 0)
+          m_id.insert(make_pair(track.trackID, make_tuple(track.truth_pt, track.truth_eta, track.truth_phi)));
+
       for(; itruth < nen_truth; itruth++)
       {
         ntp_gtrack->GetEntry(itruth);
         if((int)event < iev) continue;
         if((int)event > iev) break;
         if(gtrackID > 0 && gembed > 0)
-        {
           h2_truth->Fill(gpt, ntrack);
-          if(nmaps > 2 && ntpc > 20)
-          {
-            h2_reco->Fill(gpt, ntrack);
-            h3_resol->Fill(gpt, pt/gpt, ntrack);
-            h3_eta->Fill(gpt, eta-geta, ntrack);
-            h3_phi->Fill(gpt, phi-gphi, ntrack);
-          }
-        }
-        if(nmaps > 2 && ntpc > 20)
-          m_gid2id.insert(make_pair((int)gtrackID, (int)trackID));
-      }
+      } // itruth
 
-      multimap<int, pair<int,Float_t>> m_id2gid;
       for(; ireco < nen_reco; ireco++)
       {
         ntp_track->GetEntry(ireco);
@@ -125,20 +127,21 @@ int main(int argc, const char *argv[])
         if(nmaps > 2 && ntpc > 20)
         {
           h2_all->Fill(pt, ntrack);
-          m_id2gid.insert(make_pair((int)trackID, make_pair((int)gtrackID, pt)));
-        }
-      }
-
-      for(const auto &[id, gid_pt] : m_id2gid)
-      {
-        auto id_range = m_gid2id.equal_range(gid_pt.first);
-        for(auto it = id_range.first; it != id_range.second; it++)
-          if(it->second == id)
+          const auto &it = m_id.find((int)trackID);
+          if(it != m_id.end())
           {
-            h2_good->Fill(gid_pt.second, ntrack);
-            break;
-          }
-      }
+            Float_t gpt = get<0>(it->second);
+            Float_t geta = get<1>(it->second);
+            Float_t gphi = get<2>(it->second);
+
+            h2_good->Fill(pt, ntrack);
+            h2_reco->Fill(gpt, ntrack);
+            h3_resol->Fill(gpt, pt/gpt, ntrack);
+            h3_eta->Fill(gpt, eta-geta, ntrack);
+            h3_phi->Fill(gpt, phi-gphi, ntrack);
+          } // matched reco
+        } // all reco
+      } // ireco
     } // iev
 
     delete h_ntrack;
