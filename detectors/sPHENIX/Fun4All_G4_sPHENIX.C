@@ -347,7 +347,7 @@ int Fun4All_G4_sPHENIX(
   Enable::HCALOUT_QA = Enable::HCALOUT_CLUSTER && Enable::QA && true;
 
   Enable::EPD = false;
-  //Enable::EPD_TILE = false;
+  Enable::EPD_TILE = Enable::EPD && true;
 
   Enable::BEAMLINE = true;
 //  Enable::BEAMLINE_ABSORBER = true;  // makes the beam line magnets sensitive volumes
@@ -469,7 +469,7 @@ int Fun4All_G4_sPHENIX(
   // EPD tile reconstruction
   //--------------
 
-  //if (Enable::EPD_TILE) EPD_Tiles();
+  if (Enable::EPD_TILE) EPD_Tiles();
 
   //-----------------------------
   // HCAL towering and clustering

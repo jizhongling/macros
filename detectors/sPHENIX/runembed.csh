@@ -9,8 +9,8 @@ set runno = 62
 @ iend = $proc + 1
 
 # Output directories
-set tree_dir = ${_CONDOR_SCRATCH_DIR}
-#set tree_dir = $SPIN/data/sphenix/output
+#set tree_dir = ${_CONDOR_SCRATCH_DIR}
+set tree_dir = $SPIN/data/sphenix/output
 set hist_dir = $SPIN/data/sphenix/histos
 mkdir -p $tree_dir $hist_dir
 
