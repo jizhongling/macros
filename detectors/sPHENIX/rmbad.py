@@ -8,7 +8,7 @@ def main():
             file.name.endswith(".root") and
             file.is_file()):
             try:
-                ur.lazy(file.path + ":T")
+                ur.dask(file.path + ":T")
             except ur.exceptions.KeyInFileError:
                 print("rm " + file.name)
                 os.system("rm " + file.path)
