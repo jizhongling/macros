@@ -39,6 +39,7 @@ R__LOAD_LIBRARY(libtrackeralign.so)
 #include <trackreco/PHTruthSiliconAssociation.h>
 #include <trackreco/PHTruthTrackSeeding.h>
 #include <trackreco/PHTruthVertexing.h>
+#include <trackreco/SecondaryVertexFinder.h>
 
 #include <tpc/TpcLoadDistortionCorrection.h>
 
@@ -89,6 +90,7 @@ namespace G4TRACKING
   // Flag to run commissioning seeding workflow with tuned parameters for
   // misaligned + distorted tracks
   bool use_alignment = false;
+  bool filter_conversion_electrons = false;
 
 }  // namespace G4TRACKING
 
@@ -315,7 +317,7 @@ void Tracking_Reco_TrackFit()
   // perform final track fit with ACTS
   auto actsFit = new PHActsTrkFitter;
   actsFit->Verbosity(verbosity);
-  actsFit->commissioning(G4TRACKING::use_alignment);
+  //actsFit->commissioning(G4TRACKING::use_alignment);
   actsFit->set_cluster_version(G4TRACKING::cluster_version);
   // in calibration mode, fit only Silicons and Micromegas hits
   actsFit->fitSiliconMMs(G4TRACKING::SC_CALIBMODE);
@@ -470,12 +472,14 @@ void alignment(std::string datafilename = "mille_output_data_file",
   mille->Verbosity(verbosity);
   mille->set_datafile_name(datafilename + ".bin");
   mille->set_steeringfile_name(steeringfilename + ".txt");
+  mille->set_cluster_version(G4TRACKING::cluster_version);
   se->registerSubsystem(mille);
 
   auto helical = new HelicalFitter;
-  helical->Verbosity(verbosity);
+  helical->Verbosity(0);
   helical->set_datafile_name(datafilename + "_helical.bin");
   helical->set_steeringfile_name(steeringfilename + "_helical.txt");
+  helical->set_cluster_version(G4TRACKING::cluster_version);
   se->registerSubsystem(helical);
 
 }
@@ -510,6 +514,19 @@ void Tracking_Reco()
     }
 
 }
+
+void  Filter_Conversion_Electrons(std::string ntuple_outfile)
+{
+  Fun4AllServer* se = Fun4AllServer::instance();
+  SecondaryVertexFinder* secvert = new SecondaryVertexFinder;
+  secvert->Verbosity(0);
+  secvert->set_write_electrons_node(true);  // writes copy of filtered electron tracks to node tree
+  secvert->set_write_ntuple(false);  // writes ntuple for tuning cuts
+  secvert->setDecayParticleMass( 0.000511);  // for electrons
+  secvert->setOutfileName(ntuple_outfile);
+  se->registerSubsystem(secvert);
+}
+
 
 void build_truthreco_tables()
 {
