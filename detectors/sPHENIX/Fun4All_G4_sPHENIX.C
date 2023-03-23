@@ -88,7 +88,7 @@ int Fun4All_G4_sPHENIX(
   // Further choose to embed newly simulated events to a previous simulation. Not compatible with `readhits = true`
   // In case embedding into a production output, please double check your G4Setup_sPHENIX.C and G4_*.C consistent with those in the production macro folder
   // E.g. /sphenix/sim//sim01/production/2016-07-21/single_particle/spacal2d/
-  Input::EMBED = true;
+  //Input::EMBED = true;
   INPUTEMBED::filename[0] = embed_input_file0;
   INPUTEMBED::filename[1] = embed_input_file1;
   // if you use a filelist
@@ -142,8 +142,9 @@ int Fun4All_G4_sPHENIX(
   // add the settings for other with [1], next with [2]...
   if (Input::SIMPLE)
   {
-    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi-", 50);
-    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi+", 50);
+    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi-", 50);
+    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi+", 50);
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("omega-", 50);
     if (Input::HEPMC || Input::EMBED)
     {
       INPUTGENERATOR::SimpleEventGenerator[0]->set_reuse_existing_vertex(true);
@@ -312,9 +313,9 @@ int Fun4All_G4_sPHENIX(
   Enable::MICROMEGAS_QA = Enable::MICROMEGAS_CLUSTER && Enable::QA && true;
 
   Enable::TRACKING_TRACK = (Enable::MICROMEGAS_CLUSTER && Enable::TPC_CLUSTER && Enable::INTT_CLUSTER && Enable::MVTX_CLUSTER) && true;
-  Enable::TRACKING_EVAL = Enable::TRACKING_TRACK && true;
+  Enable::TRACKING_EVAL = Enable::TRACKING_TRACK && false;
   Enable::TRACKING_QA = Enable::TRACKING_TRACK && Enable::QA && true;
-  //G4TRACKING::filter_conversion_electrons = true;
+  G4TRACKING::filter_conversion_electrons = true;
 
   //  cemc electronics + thin layer of W-epoxy to get albedo from cemc
   //  into the tracking, cannot run together with CEMC
@@ -577,7 +578,7 @@ int Fun4All_G4_sPHENIX(
 
   // Writes electrons from conversions to a new track map on the node tree
   // the ntuple file is for diagnostics, it is produced only if the flag is set in G4_Tracking.C
-  if(G4TRACKING::filter_conversion_electrons) Filter_Conversion_Electrons(outputroot + "_secvert_ntuple.root");
+  if(G4TRACKING::filter_conversion_electrons) Filter_Conversion_Electrons(fullroot + "_secvert_ntuple" + suffix);
 
   //======================
   // Run KFParticle on evt

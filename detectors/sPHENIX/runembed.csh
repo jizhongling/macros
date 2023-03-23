@@ -9,8 +9,8 @@ set runno = 6
 @ iend = $proc + 1
 
 # Output directories
-set tree_dir = ${_CONDOR_SCRATCH_DIR}
-#set tree_dir = $SPIN/data/sphenix/output
+#set tree_dir = ${_CONDOR_SCRATCH_DIR}
+set tree_dir = $SPIN/data/sphenix/output
 set hist_dir = $SPIN/data/sphenix/histos
 mkdir -p $tree_dir $hist_dir
 
@@ -24,5 +24,5 @@ set strembed1 = `printf "DST_TRKR_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-%010d-%0
 root -l -b -q 'Fun4All_G4_sPHENIX.C('$proc', '$nevents', "'$strembed0'", "'$strembed1'", '$skip', "'$tree_dir'")'
 
 # Run the analysis code
-./AnaHitFile $tree_dir/G4sPHENIX_g4svtx_eval-$proc.root $hist_dir/training-$proc 0 $nevents
-./AnaQA $tree_dir/G4sPHENIX_g4svtx_eval- $proc $iend $hist_dir/qa-$proc-0.root
+#./AnaHitFile $tree_dir/G4sPHENIX_g4svtx_eval-$proc.root $hist_dir/training-$proc 0 $nevents
+#./AnaQA $tree_dir/G4sPHENIX_g4svtx_eval- $proc $iend $hist_dir/qa-$proc-0.root
