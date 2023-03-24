@@ -21,6 +21,7 @@ set strembed0 = `printf "DST_TRUTH_sHijing_0_20fm_50kHz_bkg_0_20fm-%010d-%05d.ro
 set strembed1 = `printf "DST_TRKR_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-%010d-%05d.root" $runno $index`
 
 # Run the Fun4AllMacro which locates the G4Hits files by FROG
+set skip = 0
 root -l -b -q 'Fun4All_G4_sPHENIX.C('$proc', '$nevents', "'$strembed0'", "'$strembed1'", '$skip', "'$tree_dir'")'
 
 # Run the analysis code
