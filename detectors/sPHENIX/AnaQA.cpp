@@ -1,4 +1,4 @@
-// g++ -std=c++17 -Wall -I$MYINSTALL/include -I$OFFLINE_MAIN/include -I$OFFLINE_MAIN/include -L$OFFLINE_MAIN/lib -lg4eval_io `root-config --cflags --glibs` -o AnaQA AnaQA.cpp
+// g++ -std=c++17 -Wall -I$MYINSTALL/include -I$OFFLINE_MAIN/include -L$MYINSTALL/lib -L$OFFLINE_MAIN/lib -lg4eval_io `root-config --cflags --glibs` -o AnaQA AnaQA.cpp
 #include <iostream>
 #include <tuple>
 #include <map>

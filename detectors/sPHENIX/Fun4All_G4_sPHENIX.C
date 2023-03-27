@@ -68,10 +68,6 @@ int Fun4All_G4_sPHENIX(
   //  rc->set_IntFlag("RANDOMSEED", 12345);
   rc->set_IntFlag("RUNNUMBER", 0);
 
-  // The default is no need to force decay anything and use the default file DECAY.DEC from the official EvtGen software
-  // DECAY.DEC is located at: https://gitlab.cern.ch/evtgen/evtgen/-/blob/master/DECAY.DEC
-  EVTGENDECAYER::DecayFile = "Omega_decay.DEC";
-
   //===============
   // Input options
   //===============
@@ -148,7 +144,8 @@ int Fun4All_G4_sPHENIX(
   {
     INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi-", 50);
     INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi+", 50);
-    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("omega-", 1);
+    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(3334, 1);  // Omega-
+    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(3122, 1);  // Lambda0
     if (Input::HEPMC || Input::EMBED)
     {
       INPUTGENERATOR::SimpleEventGenerator[0]->set_reuse_existing_vertex(true);
@@ -319,7 +316,7 @@ int Fun4All_G4_sPHENIX(
   Enable::TRACKING_TRACK = (Enable::MICROMEGAS_CLUSTER && Enable::TPC_CLUSTER && Enable::INTT_CLUSTER && Enable::MVTX_CLUSTER) && true;
   Enable::TRACKING_EVAL = Enable::TRACKING_TRACK && true;
   Enable::TRACKING_QA = Enable::TRACKING_TRACK && Enable::QA && true;
-  G4TRACKING::filter_conversion_electrons = true;
+  //G4TRACKING::filter_conversion_electrons = true;
 
   //  cemc electronics + thin layer of W-epoxy to get albedo from cemc
   //  into the tracking, cannot run together with CEMC
