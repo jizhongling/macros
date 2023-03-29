@@ -120,6 +120,16 @@ int Fun4All_G4_sPHENIX(
   //Input::UPSILON_NUMBER = 3; // if you need 3 of them
   //Input::UPSILON_VERBOSITY = 0;
 
+  KFPARTICLE::OmegaInput = true;
+  KFParticleBaseCut::minTrackPT = 0.1; // GeV
+  KFParticleBaseCut::maxTrackchi2nDoF = FLT_MAX;
+  KFParticleBaseCut::minTrackIP = -1; // cm, IP = DCA of track with vertex
+  KFParticleBaseCut::minTrackIPchi2 = -1; // IP = DCA of track with vertex
+  KFParticleBaseCut::maxVertexchi2nDoF = FLT_MAX;
+  KFParticleBaseCut::maxTrackTrackDCA = FLT_MAX; // cm
+  KFParticleBaseCut::minDIRA = 0.5; // cosine of the angle
+  KFParticleBaseCut::minMotherPT = 0.1; // GeV
+
   //  Input::HEPMC = true;
   INPUTHEPMC::filename = inputFile;
 
@@ -144,8 +154,7 @@ int Fun4All_G4_sPHENIX(
   {
     INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi-", 50);
     INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi+", 50);
-    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(3334, 1);  // Omega-
-    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(3122, 1);  // Lambda0
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(3334, 1);  // Omega-
     if (Input::HEPMC || Input::EMBED)
     {
       INPUTGENERATOR::SimpleEventGenerator[0]->set_reuse_existing_vertex(true);
@@ -153,11 +162,11 @@ int Fun4All_G4_sPHENIX(
     }
     else
     {
-      INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_function(PHG4SimpleEventGenerator::Gaus,
-                                                                                PHG4SimpleEventGenerator::Gaus,
-                                                                                PHG4SimpleEventGenerator::Gaus);
+      INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_function(PHG4SimpleEventGenerator::Uniform,
+                                                                                PHG4SimpleEventGenerator::Uniform,
+                                                                                PHG4SimpleEventGenerator::Uniform);
       INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_mean(0., 0., 0.);
-      INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_width(0.01, 0.01, 5.);
+      INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_width(0., 0., 0.);
     }
     INPUTGENERATOR::SimpleEventGenerator[0]->set_eta_range(-1, 1);
     INPUTGENERATOR::SimpleEventGenerator[0]->set_phi_range(-M_PI, M_PI);
@@ -316,7 +325,7 @@ int Fun4All_G4_sPHENIX(
   Enable::TRACKING_TRACK = (Enable::MICROMEGAS_CLUSTER && Enable::TPC_CLUSTER && Enable::INTT_CLUSTER && Enable::MVTX_CLUSTER) && true;
   Enable::TRACKING_EVAL = Enable::TRACKING_TRACK && true;
   Enable::TRACKING_QA = Enable::TRACKING_TRACK && Enable::QA && true;
-  //G4TRACKING::filter_conversion_electrons = true;
+  G4TRACKING::filter_conversion_electrons = true;
 
   //  cemc electronics + thin layer of W-epoxy to get albedo from cemc
   //  into the tracking, cannot run together with CEMC
@@ -368,10 +377,10 @@ int Fun4All_G4_sPHENIX(
   Enable::GLOBAL_RECO = (Enable::BBCFAKE || Enable::TRACKING_TRACK) && true;
   //Enable::GLOBAL_FASTSIM = true;
 
-  //Enable::KFPARTICLE = true;
-  //Enable::KFPARTICLE_VERBOSITY = 1;
-  //Enable::KFPARTICLE_TRUTH_MATCH = true;
-  //Enable::KFPARTICLE_SAVE_NTUPLE = true;
+  Enable::KFPARTICLE = true;
+  Enable::KFPARTICLE_VERBOSITY = 0;
+  Enable::KFPARTICLE_TRUTH_MATCH = false;
+  Enable::KFPARTICLE_SAVE_NTUPLE = true;
 
   Enable::CALOTRIGGER = Enable::CEMC_TOWER && Enable::HCALIN_TOWER && Enable::HCALOUT_TOWER && false;
 
@@ -586,6 +595,7 @@ int Fun4All_G4_sPHENIX(
   //======================
   if (Enable::KFPARTICLE && Input::UPSILON) KFParticle_Upsilon_Reco();
   if (Enable::KFPARTICLE && Input::DZERO) KFParticle_D0_Reco();
+  if (Enable::KFPARTICLE && KFPARTICLE::OmegaInput) KFParticle_Omega_Reco(DstOut::OutputDir, nJob);
 
   //----------------------
   // Standard QAs

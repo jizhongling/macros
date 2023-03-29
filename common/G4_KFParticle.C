@@ -28,6 +28,9 @@ namespace Enable
 
 namespace KFPARTICLE
 {
+  typedef std::vector<float> vf;
+  typedef std::vector<std::pair<float, float>> vff;
+
   bool QA = false;
 
   bool runUpsilonReco = false;
@@ -47,15 +50,25 @@ namespace KFPARTICLE
   std::string LambdacDecayDescriptor = "[" + LambdacName + " -> proton^+ K^- pi^+]cc";
   std::pair<float, float> LambdacMassRange(2.15, 2.45);
   bool LambdacTrigger = false;
+
+  bool OmegaInput = false;
+  bool runOmegaReco = false;
+  std::string OmegaName = "Omega-";
+  std::string OmegaDecayDescriptor = OmegaName + " -> {Lambda0 -> proton^+ pi^-} K^-";
+  std::pair<float, float> OmegaMassRange(1., 2.5);
+  std::pair<float, float> Lambda0MassRange(0.5, 2.);
+  bool OmegaTrigger = false;
 } //namesppace KFPARTICLE
 
 namespace KFParticleBaseCut
 {
   float minTrackPT = 0.5; // GeV
   float maxTrackchi2nDoF = 2;
+  float minTrackIP = 0.01; // cm, IP = DCA of track with vertex
   float minTrackIPchi2 = 15; // IP = DCA of track with vertex
   float maxVertexchi2nDoF = 2;
   float maxTrackTrackDCA = 0.05; // cm
+  float minDIRA = 0.9; // cosine of the angle
   float minMotherPT = 0; // GeV
 }  // namespace KFParticleBaseCut
 
@@ -172,6 +185,53 @@ void KFParticle_Lambdac_Reco()
   return;
 }
 
+void KFParticle_Omega_Reco(const string &outdir, const int index)
+{
+  int verbosity = std::max(Enable::VERBOSITY, Enable::KFPARTICLE_VERBOSITY);
+
+  Fun4AllServer *se = Fun4AllServer::instance();
+
+  KFParticle_sPHENIX *kfparticle = new KFParticle_sPHENIX("KFParticle_" + KFPARTICLE::OmegaName + "_Reco");
+  kfparticle->Verbosity(verbosity);
+  kfparticle->setDecayDescriptor(KFPARTICLE::OmegaDecayDescriptor);
+  kfparticle->getChargeConjugate(false);
+
+  kfparticle->saveDST(Enable::KFPARTICLE_APPEND_TO_DST);
+  kfparticle->saveOutput(Enable::KFPARTICLE_SAVE_NTUPLE);
+  kfparticle->doTruthMatching(Enable::KFPARTICLE_TRUTH_MATCH);
+  kfparticle->getDetectorInfo(Enable::KFPARTICLE_DETECTOR_INFO);
+
+  kfparticle->setMinimumTrackPT(KFParticleBaseCut::minTrackPT);
+  kfparticle->setMinimumTrackIP(KFParticleBaseCut::minTrackIP);
+  kfparticle->setMinimumTrackIPchi2(KFParticleBaseCut::minTrackIPchi2);
+  kfparticle->setMaximumTrackchi2nDOF(KFParticleBaseCut::maxTrackchi2nDoF);
+
+  kfparticle->setMaximumVertexchi2nDOF(KFParticleBaseCut::maxVertexchi2nDoF);
+  kfparticle->setMaximumDaughterDCA(KFParticleBaseCut::maxTrackTrackDCA);
+  kfparticle->setMinDIRA(KFParticleBaseCut::minDIRA);
+
+  kfparticle->setMinimumMass(KFPARTICLE::OmegaMassRange.first);
+  kfparticle->setMaximumMass(KFPARTICLE::OmegaMassRange.second);
+  kfparticle->setMotherPT(KFParticleBaseCut::minMotherPT);
+  kfparticle->constrainToPrimaryVertex(true);
+
+  kfparticle->setIntermediateMassRange(KFPARTICLE::vff{KFPARTICLE::Lambda0MassRange});
+  kfparticle->setIntermediateMinPT(KFPARTICLE::vf{KFParticleBaseCut::minTrackPT});
+  kfparticle->setIntermediateIPRange(KFPARTICLE::vff{std::make_pair(KFParticleBaseCut::minTrackIP, FLT_MAX)});
+  kfparticle->setIntermediateIPchi2Range(KFPARTICLE::vff{std::make_pair(KFParticleBaseCut::minTrackIPchi2, FLT_MAX)});
+  kfparticle->setIntermediateMinDIRA(KFPARTICLE::vf{KFParticleBaseCut::minDIRA});
+  kfparticle->setIntermediateMinFDchi2(KFPARTICLE::vf{-1});
+
+  kfparticle->setContainerName(KFPARTICLE::OmegaName);
+  kfparticle->setOutputName(outdir + "/KFParticleOutput_" + KFPARTICLE::OmegaName + "_reconstruction-" + std::to_string(index) + ".root");
+
+  se->registerSubsystem(kfparticle);
+
+  KFPARTICLE::runOmegaReco = true;
+
+  return;
+}
+
 void KFParticle_QA()
 {
   int verbosity = std::max(Enable::VERBOSITY, Enable::KFPARTICLE_VERBOSITY);
@@ -230,6 +290,24 @@ void KFParticle_QA()
                                                                        KFPARTICLE::LambdacMassRange.first,  
                                                                        KFPARTICLE::LambdacMassRange.second);
     se->registerSubsystem(LambdacQA);
+  }
+
+  if (KFPARTICLE::runOmegaReco)
+  {
+    DecayFinder *OmegaFinder = new DecayFinder("DecayFinder_" + KFPARTICLE::OmegaName);
+    OmegaFinder->Verbosity(verbosity);
+    OmegaFinder->setDecayDescriptor(KFPARTICLE::OmegaDecayDescriptor);
+    OmegaFinder->triggerOnDecay(KFPARTICLE::OmegaTrigger);
+    OmegaFinder->saveDST(true);
+    OmegaFinder->allowPi0(true);
+    OmegaFinder->allowPhotons(true);
+    se->registerSubsystem(OmegaFinder);
+
+    QAG4SimulationKFParticle *OmegaQA = new QAG4SimulationKFParticle("QA_" + KFPARTICLE::OmegaName,
+                                                                     KFPARTICLE::OmegaName,
+                                                                     KFPARTICLE::OmegaMassRange.first,
+                                                                     KFPARTICLE::OmegaMassRange.second);
+    se->registerSubsystem(OmegaQA);
   }
 
   return;
