@@ -16,8 +16,6 @@ R__LOAD_LIBRARY(libtrackeralign.so)
 #include <G4_TPC.C>
 #include <QA.C>
 
-#include <g4eval/TruthRecoTrackMatching.h>
-#include <g4eval/TrackEvaluation.h>
 #include <g4eval/SvtxEvaluator.h>
 #include <g4eval/SvtxTruthRecoTableEval.h>
 #include <g4eval/TrackSeedTrackMapConverter.h>
@@ -505,16 +503,8 @@ void  Filter_Conversion_Electrons(std::string ntuple_outfile)
   Fun4AllServer* se = Fun4AllServer::instance();
   SecondaryVertexFinder* secvert = new SecondaryVertexFinder;
   secvert->Verbosity(0);
-  secvert->set_write_electrons_node(false);  // writes copy of filtered electron tracks to node tree
+  secvert->set_write_electrons_node(true);  // writes copy of filtered electron tracks to node tree
   secvert->set_write_ntuple(false);  // writes ntuple for tuning cuts
-  //secvert->set_write_ntuple_v0(true);  // writes ntuple for V0 analysis
-  secvert->setRequireMVTX(false);
-  secvert->setTrackQualityCut(4.);
-  //secvert->setProjTrackZCut(1.);
-  secvert->setTrackDcaCut(0., 0.);
-  secvert->setTwoTrackDcaCut(3.);
-  secvert->setMinPathCut(0.);
-  //secvert->setCosThetaCut(0.9);
   secvert->setDecayParticleMass( 0.000511);  // for electrons
   secvert->setOutfileName(ntuple_outfile);
   se->registerSubsystem(secvert);
@@ -555,20 +545,6 @@ void Tracking_Eval(const std::string& outputfile)
   Fun4AllServer* se = Fun4AllServer::instance();
   build_truthreco_tables(); 
 
-  if(false)
-  {
-    auto trackmatcher = new TruthRecoTrackMatching(1, 0, 1.0, 0.1, 0.2, 0.2, 1.0, 1.0);
-    //trackmatcher->Verbosity(250);
-    se->registerSubsystem(trackmatcher);
-  }
-
-  if(false)
-  {
-    auto trackEvaluation = new TrackEvaluation;
-    trackEvaluation->set_flags(TrackEvaluation::EvalTracks);
-    se->registerSubsystem(trackEvaluation);
-  }
-
   //----------------
   // Tracking evaluation
   //----------------
@@ -578,21 +554,14 @@ void Tracking_Eval(const std::string& outputfile)
                            G4INTT::n_intt_layer,
                            G4TPC::n_gas_layer,
                            G4MICROMEGAS::n_micromegas_layer);
-  eval->do_cluster_eval(false);
-  eval->do_g4cluster_eval(false);
-  eval->do_training_eval(false);
-  eval->do_hit_eval(false);  // enable to see the hits that includes the chamber physics...
+  eval->do_cluster_eval(true);
   eval->do_g4hit_eval(false);
-  eval->do_gtrack_eval(true);
-  eval->do_track_eval(false);
-  eval->do_track_match(false);
-  eval->do_trackeval_eval(false);
-  eval->do_gpoint_eval(false);
-  eval->do_vertex_eval(false);
+  eval->do_hit_eval(false);  // enable to see the hits that includes the chamber physics...
+  eval->do_gpoint_eval(true);
   eval->do_vtx_eval_light(true);
   eval->do_eval_light(true);
   eval->set_use_initial_vertex(G4TRACKING::g4eval_use_initial_vertex);
-  bool embed_scan = false;
+  bool embed_scan = true;
   if(TRACKING::pp_mode) embed_scan = false;
   eval->scan_for_embedded(embed_scan);   // take all tracks if false - take only embedded tracks if true
   eval->scan_for_primaries(embed_scan);  // defaults to only thrown particles for ntp_gtrack
