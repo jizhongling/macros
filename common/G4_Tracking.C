@@ -484,14 +484,14 @@ void  Filter_Conversion_Electrons(std::string ntuple_outfile)
   secvert->Verbosity(0);
   secvert->set_write_electrons_node(false);  // writes copy of filtered electron tracks to node tree
   secvert->set_write_ntuple(false);  // writes ntuple for tuning cuts
-  secvert->set_write_ntuple_v0(true);  // writes ntuple for V0 analysis
+  //secvert->set_write_ntuple_v0(true);  // writes ntuple for V0 analysis
   secvert->setRequireMVTX(false);
   secvert->setTrackQualityCut(4.);
-  secvert->setProjTrackZCut(1.);
+  //secvert->setProjTrackZCut(1.);
   secvert->setTrackDcaCut(0., 0.);
   secvert->setTwoTrackDcaCut(3.);
   secvert->setMinPathCut(0.);
-  secvert->setCosThetaCut(0.9);
+  //secvert->setCosThetaCut(0.9);
   secvert->setDecayParticleMass( 0.000511);  // for electrons
   secvert->setOutfileName(ntuple_outfile);
   se->registerSubsystem(secvert);
