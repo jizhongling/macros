@@ -21,10 +21,13 @@ void Tracking_Eval(const std::string& outputfile)
   Fun4AllServer* se = Fun4AllServer::instance();
   build_truthreco_tables(); 
 
-  if(false)
+  if(true)
   {
     auto trackmatcher = new TruthRecoTrackMatching(1, 0, 1.0, 0.1, 0.2, 0.2, 1.0, 1.0);
     //trackmatcher->Verbosity(250);
+    bool embed_scan = true;
+    trackmatcher->scan_for_embedded(embed_scan);   // take all tracks if false - take only embedded tracks if true
+    trackmatcher->scan_for_primaries(embed_scan);
     se->registerSubsystem(trackmatcher);
   }
 
@@ -50,15 +53,15 @@ void Tracking_Eval(const std::string& outputfile)
   eval->do_hit_eval(false);  // enable to see the hits that includes the chamber physics...
   eval->do_g4hit_eval(false);
   eval->do_gtrack_eval(true);
-  eval->do_track_eval(false);
+  eval->do_track_eval(true);
   eval->do_track_match(false);
-  eval->do_trackeval_eval(false);
+  eval->do_trackeval_eval(true);
   eval->do_gpoint_eval(false);
   eval->do_vertex_eval(false);
   eval->do_vtx_eval_light(true);
   eval->do_eval_light(true);
   eval->set_use_initial_vertex(G4TRACKING::g4eval_use_initial_vertex);
-  bool embed_scan = false;
+  bool embed_scan = true;
   if(TRACKING::pp_mode) embed_scan = false;
   eval->scan_for_embedded(embed_scan);   // take all tracks if false - take only embedded tracks if true
   eval->scan_for_primaries(embed_scan);  // defaults to only thrown particles for ntp_gtrack

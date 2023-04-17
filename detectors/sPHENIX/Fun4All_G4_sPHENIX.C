@@ -127,15 +127,15 @@ int Fun4All_G4_sPHENIX(
   //Input::UPSILON_NUMBER = 3; // if you need 3 of them
   //Input::UPSILON_VERBOSITY = 0;
 
-  KFPARTICLE::OmegaInput = true;
-  KFParticleBaseCut::minTrackPT = 0.1; // GeV
-  KFParticleBaseCut::maxTrackchi2nDoF = FLT_MAX;
-  KFParticleBaseCut::minTrackIP = -1; // cm, IP = DCA of track with vertex
-  KFParticleBaseCut::minTrackIPchi2 = -1; // IP = DCA of track with vertex
-  KFParticleBaseCut::maxVertexchi2nDoF = FLT_MAX;
-  KFParticleBaseCut::maxTrackTrackDCA = FLT_MAX; // cm
-  KFParticleBaseCut::minDIRA = 0.5; // cosine of the angle
-  KFParticleBaseCut::minMotherPT = 0.1; // GeV
+  //KFPARTICLE::OmegaInput = true;
+  //KFParticleBaseCut::minTrackPT = 0.1; // GeV
+  //KFParticleBaseCut::maxTrackchi2nDoF = FLT_MAX;
+  //KFParticleBaseCut::minTrackIP = -1; // cm, IP = DCA of track with vertex
+  //KFParticleBaseCut::minTrackIPchi2 = -1; // IP = DCA of track with vertex
+  //KFParticleBaseCut::maxVertexchi2nDoF = FLT_MAX;
+  //KFParticleBaseCut::maxTrackTrackDCA = FLT_MAX; // cm
+  //KFParticleBaseCut::minDIRA = 0.5; // cosine of the angle
+  //KFParticleBaseCut::minMotherPT = 0.1; // GeV
 
   //  Input::HEPMC = true;
   INPUTHEPMC::filename = inputFile;
@@ -159,9 +159,11 @@ int Fun4All_G4_sPHENIX(
   // add the settings for other with [1], next with [2]...
   if (Input::SIMPLE)
   {
-    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi-", 50);
-    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi+", 50);
-    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(3334, 1);  // Omega-
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi-", 5);
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi+", 5);
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("e-", 5);
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("e+", 5);
+    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(3334, 1);  // Omega-
     if (Input::HEPMC || Input::EMBED)
     {
       INPUTGENERATOR::SimpleEventGenerator[0]->set_reuse_existing_vertex(true);
@@ -169,11 +171,11 @@ int Fun4All_G4_sPHENIX(
     }
     else
     {
-      INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_function(PHG4SimpleEventGenerator::Uniform,
-                                                                                PHG4SimpleEventGenerator::Uniform,
-                                                                                PHG4SimpleEventGenerator::Uniform);
+      INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_function(PHG4SimpleEventGenerator::Gaus,
+                                                                                PHG4SimpleEventGenerator::Gaus,
+                                                                                PHG4SimpleEventGenerator::Gaus);
       INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_mean(0., 0., 0.);
-      INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_width(0., 0., 0.);
+      INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_width(0.01, 0.01, 5.);
     }
     INPUTGENERATOR::SimpleEventGenerator[0]->set_eta_range(-1, 1);
     INPUTGENERATOR::SimpleEventGenerator[0]->set_phi_range(-M_PI, M_PI);
@@ -342,7 +344,7 @@ int Fun4All_G4_sPHENIX(
   //  into the tracking, cannot run together with CEMC
   //  Enable::CEMCALBEDO = true;
 
-  Enable::CEMC = false;
+  Enable::CEMC = true;
   Enable::CEMC_ABSORBER = true;
   Enable::CEMC_CELL = Enable::CEMC && true;
   Enable::CEMC_TOWER = Enable::CEMC_CELL && true;
@@ -350,7 +352,7 @@ int Fun4All_G4_sPHENIX(
   Enable::CEMC_EVAL = Enable::CEMC_CLUSTER && true;
   Enable::CEMC_QA = Enable::CEMC_CLUSTER && Enable::QA && true;
 
-  Enable::HCALIN = false;
+  Enable::HCALIN = true;
   Enable::HCALIN_ABSORBER = true;
   Enable::HCALIN_CELL = Enable::HCALIN && true;
   Enable::HCALIN_TOWER = Enable::HCALIN_CELL && true;
@@ -361,7 +363,7 @@ int Fun4All_G4_sPHENIX(
   Enable::MAGNET = true;
   Enable::MAGNET_ABSORBER = true;
 
-  Enable::HCALOUT = false;
+  Enable::HCALOUT = true;
   Enable::HCALOUT_ABSORBER = true;
   Enable::HCALOUT_CELL = Enable::HCALOUT && true;
   Enable::HCALOUT_TOWER = Enable::HCALOUT_CELL && true;
@@ -388,10 +390,10 @@ int Fun4All_G4_sPHENIX(
   Enable::GLOBAL_RECO = (Enable::BBCFAKE || Enable::TRACKING_TRACK) && true;
   //Enable::GLOBAL_FASTSIM = true;
 
-  Enable::KFPARTICLE = true;
-  Enable::KFPARTICLE_VERBOSITY = 0;
-  Enable::KFPARTICLE_TRUTH_MATCH = false;
-  Enable::KFPARTICLE_SAVE_NTUPLE = true;
+  //Enable::KFPARTICLE = true;
+  //Enable::KFPARTICLE_VERBOSITY = 0;
+  //Enable::KFPARTICLE_TRUTH_MATCH = false;
+  //Enable::KFPARTICLE_SAVE_NTUPLE = true;
 
   Enable::CALOTRIGGER = Enable::CEMC_TOWER && Enable::HCALIN_TOWER && Enable::HCALOUT_TOWER && false;
 
