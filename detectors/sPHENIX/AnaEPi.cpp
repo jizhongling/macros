@@ -1,4 +1,4 @@
-// g++ -Wall `root-config --cflags --glibs` -o AnaHFElectrons AnaHFElectrons.cpp
+// g++ -Wall `root-config --cflags --glibs` -o AnaEPi AnaEPi.cpp
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -37,10 +37,12 @@ int main(int argc, const char *argv[])
     bool do_fill = true;
     for(Int_t it = 0; it < ntypes; it++)
     {
-      f_in[it] = new TFile(Form("%s/G4sPHENIX_g4%s_eval-%d.root", indir, type[it], ifile));
+      char filename[1024];
+      sprintf(filename, "%s/G4sPHENIX_g4%s_eval-%d.root", indir, type[it], ifile);
+      f_in[it] = new TFile(filename);
       if(f_in[it]->IsZombie())
       {
-        cerr << "Error: cannot open file " << argv[1] << endl;
+        cerr << "Error: cannot open file " << filename << endl;
         do_fill = false;
         break;
       }

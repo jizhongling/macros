@@ -76,6 +76,10 @@ int Fun4All_G4_sPHENIX(
   //  rc->set_IntFlag("RANDOMSEED", 12345);
   rc->set_IntFlag("RUNNUMBER", 0);
 
+  // The default is no need to force decay anything and use the default file DECAY.DEC from the official EvtGen software
+  // DECAY.DEC is located at: https://gitlab.cern.ch/evtgen/evtgen/-/blob/master/DECAY.DEC
+  EVTGENDECAYER::DecayFile = "HF_decay.DEC";
+
   //===============
   // Input options
   //===============
@@ -164,6 +168,7 @@ int Fun4All_G4_sPHENIX(
     INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi+", 5);
     INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("e-", 5);
     INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("e+", 5);
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(511, 1);  // B0
     //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(3334, 1);  // Omega-
     if (Input::HEPMC || Input::EMBED)
     {
@@ -351,7 +356,7 @@ int Fun4All_G4_sPHENIX(
   Enable::CEMC_CELL = Enable::CEMC && true;
   Enable::CEMC_TOWER = Enable::CEMC_CELL && true;
   Enable::CEMC_CLUSTER = Enable::CEMC_TOWER && true;
-  Enable::CEMC_EVAL = Enable::CEMC_CLUSTER && true;
+  Enable::CEMC_EVAL = Enable::CEMC_CLUSTER && false;
   Enable::CEMC_QA = Enable::CEMC_CLUSTER && Enable::QA && true;
 
   Enable::HCALIN = true;
@@ -359,7 +364,7 @@ int Fun4All_G4_sPHENIX(
   Enable::HCALIN_CELL = Enable::HCALIN && true;
   Enable::HCALIN_TOWER = Enable::HCALIN_CELL && true;
   Enable::HCALIN_CLUSTER = Enable::HCALIN_TOWER && true;
-  Enable::HCALIN_EVAL = Enable::HCALIN_CLUSTER && true;
+  Enable::HCALIN_EVAL = Enable::HCALIN_CLUSTER && false;
   Enable::HCALIN_QA = Enable::HCALIN_CLUSTER && Enable::QA && true;
 
   Enable::MAGNET = true;
@@ -370,7 +375,7 @@ int Fun4All_G4_sPHENIX(
   Enable::HCALOUT_CELL = Enable::HCALOUT && true;
   Enable::HCALOUT_TOWER = Enable::HCALOUT_CELL && true;
   Enable::HCALOUT_CLUSTER = Enable::HCALOUT_TOWER && true;
-  Enable::HCALOUT_EVAL = Enable::HCALOUT_CLUSTER && true;
+  Enable::HCALOUT_EVAL = Enable::HCALOUT_CLUSTER && false;
   Enable::HCALOUT_QA = Enable::HCALOUT_CLUSTER && Enable::QA && true;
 
   Enable::EPD = false;

@@ -1,0 +1,5 @@
+Decay B0
+1.0000   D*-     e+      nu_e       PHOTOS HQET2 1.207 0.920 1.406 0.853; # 1.0 * PDG2014
+Enddecay
+
+End
