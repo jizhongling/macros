@@ -33,40 +33,49 @@ int main(int argc, const char *argv[])
   const Int_t ith = stoi(string(argv[5]));
 
   auto f_out = new TFile(Form("%s-%d.root", output, ith), "RECREATE");
-  auto ntp_out = new TNtuple("ntp", "ntp of cluster energy", "trackID:pid:parent_pid:dca_r:dca_z:clus_e_cemc:clus_e_hcalin:clus_e_hcalout:clus_e_outer_cemc:clus_e_outer_hcalin:clus_e_outer_hcalout");
+  auto ntp_out = new TNtuple("ntp", "ntp of cluster energy", "signal:gflavor:px:py:pz:vx:vy:vz:pcax:pcay:pcaz:dca3dxy:dca3dz:clus_e_cemc:clus_e_hcalin:clus_e_hcalout:clus_e_outer_cemc:clus_e_outer_hcalin:clus_e_outer_hcalout");
 
   for(Int_t ifile = istart; ifile < iend; ifile++)
   {
     char filename[1024];
     sprintf(filename, "%s/G4sPHENIX_g4svtx_eval-%d.root", indir, ifile);
     auto f_in = new TFile(filename);
-    if(f_in->IsZombie())
+    if(!f_in || f_in->IsZombie())
     {
       cerr << "Error: cannot open file " << filename << endl;
       continue;
     }
 
-    TrackEvaluationContainerv1::TrackStruct::List *v_tracks = nullptr;
-    TTree *t_trackeval = static_cast<TTree*>(f_in->Get("t_trackeval"));
-    t_trackeval->SetBranchAddress("tracks", &v_tracks);
+    const int nvar = 19;
+    const char *str_gtrack[nvar] = {"parentID", "gflavor", "px", "py", "pz", "vx", "vy", "vz", "pcax", "pcay", "pcaz", "dca3dxy", "dca3dz", "clus_e_cemc", "clus_e_hcalin", "clus_e_hcalout", "clus_e_outer_cemc", "clus_e_outer_hcalin", "clus_e_outer_hcalout"};
+    Float_t var_gtrack[nvar];
+    Float_t gtrackID;
+    TNtuple *ntp_gtrack = static_cast<TNtuple*>(f_in->Get("ntp_gtrack"));
+    if(!ntp_gtrack) continue;
+    for(int ivar = 0; ivar < nvar; ivar++)
+      ntp_gtrack->SetBranchAddress(str_gtrack[ivar], &var_gtrack[ivar]);
+    ntp_gtrack->SetBranchAddress("gtrackID", &gtrackID);
 
-    for(Long64_t ien = 0; ien < t_trackeval->GetEntries(); ien++)
+    for(Long64_t ien = 0; ien < ntp_gtrack->GetEntries(); ien++)
     {
-      t_trackeval->GetEntry(ien);
-      if(!v_tracks)
-      {
-        cerr << "Entry " << ien << " has no v_tracks!" << endl;
-        continue;
-      }
+      ntp_gtrack->GetEntry(ien);
+      if(gtrackID < -1 || gtrackID == 1) continue;
 
-      for(const auto &track : *v_tracks)
-      {
-        const Int_t nlayers = 6;
-        Float_t fill_ntp[nlayers+5] = {(Float_t)track.trackID, (Float_t)track.pid, (Float_t)track.parent_pid, sqrt(square(track.x)+square(track.y)), track.z};
-        for(Int_t li = 0; li < nlayers; li++)
-          fill_ntp[li+5] = track.cal_cluster_e[li];
-        ntp_out->Fill(fill_ntp);
-      } // track
+      bool fill_this = true;
+      for(int ivar = 0; ivar < nvar; ivar++)
+        if(!TMath::Finite(var_gtrack[ivar]))
+        {
+          fill_this = false;
+          break;
+        }
+      if(!fill_this) continue;
+
+      if(var_gtrack[0] == 1 && var_gtrack[1] == -11)
+        var_gtrack[0] = 1;
+      else
+        var_gtrack[0] = 0;
+
+      ntp_out->Fill(var_gtrack);
     } // ien
 
     delete f_in;

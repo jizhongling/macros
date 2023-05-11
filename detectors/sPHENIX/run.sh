@@ -3,6 +3,9 @@
 PROC=$1
 PREFIX=$SPIN/data/sphenix/output/G4sPHENIX_g4svtx_eval-
 
+root -l -b -q "TMVAHFElectron.C(\"MLP\")"
+exit 0
+
 mkdir -p $SPIN/data/sphenix/output $SPIN/data/sphenix/histos
 for i in {0..1} ; do
   #./AnaToyClusters 10000 $SPIN/data/sphenix/histos/training-$PROC $i &

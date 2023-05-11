@@ -60,7 +60,7 @@
 #include "TMVA/Tools.h"
 #include "TMVA/TMVAGui.h"
 
-int TMVAClassification( TString myMethodList = "" )
+int TMVAEPiSeparation( TString myMethodList = "" )
 {
    // The explicit loading of the shared libTMVA is done in TMVAlogon.C, defined in .rootrc
    // if you use your private .rootrc, or run from a different directory, please copy the
@@ -174,7 +174,7 @@ int TMVAClassification( TString myMethodList = "" )
    // Read training and test data
    // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
    TFile *input(0);
-   TString fname = "results/hf-electrons.root";
+   TString fname = "results/epi-separation.root";
    if (!gSystem->AccessPathName( fname )) {
       input = TFile::Open( fname ); // check if file in local directory exists
    }
@@ -194,7 +194,7 @@ int TMVAClassification( TString myMethodList = "" )
    TTree *background     = ((TTree*)input->Get("ntp"))->CopyTree("abs(gflavor)==211 && TMath::Finite(ecemc+ehcalin+ehcalout)");
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
-   TString outfileName( "results/TMVA-hf-electrons.root" );
+   TString outfileName( "results/TMVA-epi-separation.root" );
    TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
 
    // Create the factory object. Later you can choose the methods
@@ -211,7 +211,7 @@ int TMVAClassification( TString myMethodList = "" )
                                                //"!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification" );
                                                "!V:!Silent:Color:DrawProgressBar:AnalysisType=Classification" );
 
-   TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
+   TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset-epi-separation");
    // If you wish to modify default settings
    // (please check "src/Config.h" to see all available global options)
    //
@@ -567,5 +567,5 @@ int main( int argc, char** argv )
       if (!methodList.IsNull()) methodList += TString(",");
       methodList += regMethod;
    }
-   return TMVAClassification(methodList);
+   return TMVAEPiSeparation(methodList);
 }

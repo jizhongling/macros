@@ -21,7 +21,7 @@ void Tracking_Eval(const std::string& outputfile)
   Fun4AllServer* se = Fun4AllServer::instance();
   build_truthreco_tables(); 
 
-  if(true)
+  if(false)
   {
     auto trackmatcher = new TruthRecoTrackMatching(1, 0, 1.0, 0.1, 0.2, 0.2, 1.0, 1.0);
     //trackmatcher->Verbosity(250);
@@ -55,7 +55,7 @@ void Tracking_Eval(const std::string& outputfile)
   eval->do_gtrack_eval(true);
   eval->do_track_eval(true);
   eval->do_track_match(true);
-  eval->do_trackeval_eval(true);
+  eval->do_trackeval_eval(false);
   eval->do_gpoint_eval(false);
   eval->do_vertex_eval(false);
   eval->do_vtx_eval_light(true);
