@@ -87,7 +87,7 @@ void TPC_Clustering()
 
   auto tpcclusterizer = new TpcClusterizer;
   tpcclusterizer->Verbosity(verbosity);
-  tpcclusterizer->set_use_nn(false);
+  tpcclusterizer->set_use_nn(true);
   tpcclusterizer->set_cluster_version(G4TRACKING::cluster_version);
   tpcclusterizer->set_do_hit_association( G4TPC::DO_HIT_ASSOCIATION );
   se->registerSubsystem(tpcclusterizer);

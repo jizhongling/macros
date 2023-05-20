@@ -21,7 +21,7 @@ void Tracking_Eval(const std::string& outputfile)
   Fun4AllServer* se = Fun4AllServer::instance();
   build_truthreco_tables(); 
 
-  if(false)
+  if(true)
   {
     auto trackmatcher = new TruthRecoTrackMatching(1, 0, 1.0, 0.1, 0.2, 0.2, 1.0, 1.0);
     //trackmatcher->Verbosity(250);
@@ -47,22 +47,19 @@ void Tracking_Eval(const std::string& outputfile)
                            G4INTT::n_intt_layer,
                            G4TPC::n_gas_layer,
                            G4MICROMEGAS::n_micromegas_layer);
-  eval->do_cluster_eval(false);
-  eval->do_g4cluster_eval(false);
-  eval->do_training_eval(false);
-  eval->do_hit_eval(false);  // enable to see the hits that includes the chamber physics...
+  eval->do_cluster_eval(true);
+  eval->do_g4cluster_eval(true);
+  eval->do_training_eval(true);
   eval->do_g4hit_eval(false);
-  eval->do_gtrack_eval(true);
-  eval->do_track_eval(true);
-  eval->do_track_match(true);
-  eval->do_trackeval_eval(false);
+  eval->do_hit_eval(false);  // enable to see the hits that includes the chamber physics...
   eval->do_gpoint_eval(false);
   eval->do_vertex_eval(false);
   eval->do_vtx_eval_light(true);
   eval->do_eval_light(true);
   eval->do_track_eval(true);
   eval->do_gtrack_eval(true);
-  eval->do_track_match(true);
+  eval->do_track_match(false);
+  eval->do_trackeval_eval(true);
   eval->set_use_initial_vertex(G4TRACKING::g4eval_use_initial_vertex);
   bool embed_scan = false;
   if(TRACKING::pp_mode) embed_scan = false;

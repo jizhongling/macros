@@ -78,7 +78,7 @@ int Fun4All_G4_sPHENIX(
 
   // The default is no need to force decay anything and use the default file DECAY.DEC from the official EvtGen software
   // DECAY.DEC is located at: https://gitlab.cern.ch/evtgen/evtgen/-/blob/master/DECAY.DEC
-  EVTGENDECAYER::DecayFile = "HF_decay.DEC";
+  //EVTGENDECAYER::DecayFile = "HF_decay.DEC";
 
   //===============
   // Input options
@@ -100,7 +100,7 @@ int Fun4All_G4_sPHENIX(
   // Further choose to embed newly simulated events to a previous simulation. Not compatible with `readhits = true`
   // In case embedding into a production output, please double check your G4Setup_sPHENIX.C and G4_*.C consistent with those in the production macro folder
   // E.g. /sphenix/sim//sim01/production/2016-07-21/single_particle/spacal2d/
-  //Input::EMBED = true;
+  Input::EMBED = true;
   INPUTEMBED::filename[0] = embed_input_file0;
   INPUTEMBED::filename[1] = embed_input_file1;
   // if you use a filelist
@@ -164,11 +164,11 @@ int Fun4All_G4_sPHENIX(
   // add the settings for other with [1], next with [2]...
   if (Input::SIMPLE)
   {
-    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi-", 5);
-    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi+", 5);
-    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("e-", 5);
-    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("e+", 5);
-    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(511, 1);  // B0
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi-", 50);
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi+", 50);
+    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("e-", 5);
+    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("e+", 5);
+    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(511, 1);  // B0
     //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(3334, 1);  // Omega-
     if (Input::HEPMC || Input::EMBED)
     {
@@ -351,7 +351,7 @@ int Fun4All_G4_sPHENIX(
   //  into the tracking, cannot run together with CEMC
   //  Enable::CEMCALBEDO = true;
 
-  Enable::CEMC = true;
+  Enable::CEMC = false;
   Enable::CEMC_ABSORBER = true;
   Enable::CEMC_CELL = Enable::CEMC && true;
   Enable::CEMC_TOWER = Enable::CEMC_CELL && true;
@@ -359,7 +359,7 @@ int Fun4All_G4_sPHENIX(
   Enable::CEMC_EVAL = Enable::CEMC_CLUSTER && false;
   Enable::CEMC_QA = Enable::CEMC_CLUSTER && Enable::QA && true;
 
-  Enable::HCALIN = true;
+  Enable::HCALIN = false;
   Enable::HCALIN_ABSORBER = true;
   Enable::HCALIN_CELL = Enable::HCALIN && true;
   Enable::HCALIN_TOWER = Enable::HCALIN_CELL && true;
@@ -370,7 +370,7 @@ int Fun4All_G4_sPHENIX(
   Enable::MAGNET = true;
   Enable::MAGNET_ABSORBER = true;
 
-  Enable::HCALOUT = true;
+  Enable::HCALOUT = false;
   Enable::HCALOUT_ABSORBER = true;
   Enable::HCALOUT_CELL = Enable::HCALOUT && true;
   Enable::HCALOUT_TOWER = Enable::HCALOUT_CELL && true;
