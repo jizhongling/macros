@@ -1,3 +1,5 @@
+#include "DivideFunctions.h"
+
 void PlotMulRes(TFile *f, const char *hname, const char *res_name, Double_t mean0, Double_t sigma0)
 {
   auto h3_res = (TH3*)f->Get(Form("h3_%s", hname));
@@ -45,7 +47,7 @@ void PlotMulRes(TFile *f, const char *hname, const char *res_name, Double_t mean
 
 void DrawQA()
 {
-  const Int_t ntype = 1;
+  const Int_t ntype = 2;
   const char *qa_type[] = {"", "-nn"};
   const char *event_type = "";
   const Int_t ntrack = 0;
@@ -72,8 +74,8 @@ void DrawQA()
     auto h_all = h2_all->ProjectionX("h_all", ntrack, -1);
     auto h_good = h2_good->ProjectionX("h_good", ntrack, -1);
 
-    auto g_eff = new TGraphAsymmErrors(h_reco, h_truth);
-    auto g_purity = new TGraphAsymmErrors(h_good, h_all);
+    auto g_eff = DivideHisto(h_reco, h_truth);
+    auto g_purity = DivideHisto(h_good, h_all);
 
     gStyle->SetOptStat(0);
 
