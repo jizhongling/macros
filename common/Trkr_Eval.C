@@ -6,6 +6,7 @@
 #include <Trkr_TruthTables.C>
 #include <g4eval/SvtxEvaluator.h>
 #include <g4eval/TruthRecoTrackMatching.h>
+#include <g4eval/TrkrClusterIsMatcher.h>
 #include <g4eval/TrackEvaluation.h>
 
 R__LOAD_LIBRARY(libg4eval.so)
@@ -23,7 +24,7 @@ void Tracking_Eval(const std::string& outputfile)
 
   if(true)
   {
-    auto trackmatcher = new TruthRecoTrackMatching(1, 0, 1.0, 0.1, 0.2, 0.2, 1.0, 1.0);
+    auto trackmatcher = new TruthRecoTrackMatching(new TrkrClusterIsMatcher);
     //trackmatcher->Verbosity(250);
     bool embed_scan = false;
     trackmatcher->scan_for_embedded(embed_scan);   // take all tracks if false - take only embedded tracks if true
