@@ -25,12 +25,15 @@
 #include <fun4all/Fun4AllUtils.h>
 #include <fun4all/SubsysReco.h>
 
+#include <mbd/MbdReco.h>
+
 #include <phool/recoConsts.h>
 
 R__LOAD_LIBRARY(libfun4all.so)
 R__LOAD_LIBRARY(libfun4allraw.so)
 R__LOAD_LIBRARY(libcalo_reco.so)
 R__LOAD_LIBRARY(libffamodules.so)
+R__LOAD_LIBRARY(libmbd_io.so)
 
 void Fun4All_Year1(const std::string &fname = "/sphenix/lustre01/sphnxpro/commissioning/aligned_prdf/beam-00021796-0076.prdf", int nEvents = 5)
 {
@@ -56,6 +59,11 @@ void Fun4All_Year1(const std::string &fname = "/sphenix/lustre01/sphnxpro/commis
   rc->set_StringFlag("CDB_GLOBALTAG", "ProdA_2023");
   // // 64 bit timestamp
   rc->set_uint64Flag("TIMESTAMP", runnumber);
+  CDBInterface::instance()->Verbosity(1);
+
+  // MBD/BBC Reconstruction
+  MbdReco *mbdreco = new MbdReco();
+  se->registerSubsystem( mbdreco );
 
   /////////////////
   // build towers
@@ -180,7 +188,6 @@ void Fun4All_Year1(const std::string &fname = "/sphenix/lustre01/sphnxpro/commis
 
   std::cout << "Adding Geometry file" << std::endl;
   Fun4AllInputManager *intrue2 = new Fun4AllRunNodeInputManager("DST_GEO");
-  CDBInterface::instance()->Verbosity(10);
   std::string geoLocation = CDBInterface::instance()->getUrl("calo_geo");
   intrue2->AddFile(geoLocation);
   se->registerInputManager(intrue2);
@@ -227,6 +234,7 @@ void Fun4All_Year1(const std::string &fname = "/sphenix/lustre01/sphnxpro/commis
   se->End();
   CDBInterface::instance()->Print(); // print used DB files
   se->PrintTimer();
+  delete se;
   std::cout << "All done!" << std::endl;
   gSystem->Exit(0);
 }
