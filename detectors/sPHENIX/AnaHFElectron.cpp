@@ -47,30 +47,27 @@ int main(int argc, const char *argv[])
     }
 
     const int nvar = 19;
-    const char *str_gtrack[nvar] = {"parentID", "gflavor", "px", "py", "pz", "vx", "vy", "vz", "pcax", "pcay", "pcaz", "dca3dxy", "dca3dz", "clus_e_cemc", "clus_e_hcalin", "clus_e_hcalout", "clus_e_outer_cemc", "clus_e_outer_hcalin", "clus_e_outer_hcalout"};
+    const char *str_gtrack[nvar] = {"gparentPID", "gflavor", "px", "py", "pz", "vx", "vy", "vz", "pcax", "pcay", "pcaz", "dca3dxy", "dca3dz", "clus_e_cemc", "clus_e_hcalin", "clus_e_hcalout", "clus_e_outer_cemc", "clus_e_outer_hcalin", "clus_e_outer_hcalout"};
     Float_t var_gtrack[nvar];
-    Float_t gtrackID;
     TNtuple *ntp_gtrack = static_cast<TNtuple*>(f_in->Get("ntp_gtrack"));
     if(!ntp_gtrack) continue;
     for(int ivar = 0; ivar < nvar; ivar++)
       ntp_gtrack->SetBranchAddress(str_gtrack[ivar], &var_gtrack[ivar]);
-    ntp_gtrack->SetBranchAddress("gtrackID", &gtrackID);
 
     for(Long64_t ien = 0; ien < ntp_gtrack->GetEntries(); ien++)
     {
       ntp_gtrack->GetEntry(ien);
-      if(gtrackID < -1 || gtrackID == 1) continue;
 
-      bool fill_this = true;
+      if(!TMath::Finite(var_gtrack[13]) || abs(var_gtrack[1]) != 11)
+        continue;
+
       for(int ivar = 0; ivar < nvar; ivar++)
         if(!TMath::Finite(var_gtrack[ivar]))
-        {
-          fill_this = false;
-          break;
-        }
-      if(!fill_this) continue;
+          var_gtrack[ivar] = 0;
 
-      if(var_gtrack[0] == 1 && var_gtrack[1] == -11)
+      int ppid = abs(var_gtrack[0]);
+      if( (ppid > 500  && ppid < 600 ) ||
+          (ppid > 5000 && ppid < 6000) )
         var_gtrack[0] = 1;
       else
         var_gtrack[0] = 0;
