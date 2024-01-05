@@ -30,10 +30,10 @@ int main(int argc, const char *argv[])
   const Int_t istart = stoi(string(argv[2]));
   const Int_t iend = stoi(string(argv[3]));
   const char *output = argv[4];
-  const Int_t ith = stoi(string(argv[5]));
+  const char *ith = argv[5];
 
-  auto f_out = new TFile(Form("%s-%d.root", output, ith), "RECREATE");
-  auto ntp_out = new TNtuple("ntp", "ntp of cluster energy", "signal:gflavor:px:py:pz:vx:vy:vz:pcax:pcay:pcaz:dca3dxy:dca3dz:clus_e_cemc:clus_e_hcalin:clus_e_hcalout:clus_e_outer_cemc:clus_e_outer_hcalin:clus_e_outer_hcalout");
+  auto f_out = new TFile(Form("%s-%s.root", output, ith), "RECREATE");
+  auto ntp_out = new TNtuple("ntp", "ntp of cluster energy", "signal:gflavor:gntracks:gnchghad:gnhits:gnmaps:gnintt:gnmms:gnintt1:gnintt2:gnintt3:gnintt4:gnintt5:gnintt6:gnintt7:gnintt8:gntpc:gnlmaps:gnlintt:gnltpc:gnlmms:gpx:gpy:gpz:gpt:geta:gphi:gvx:gvy:gvz:gvt:gfpx:gfpy:gfpz:gfx:gfy:gfz:px:py:pz:pt:eta:phi:deltapt:deltaeta:deltaphi:siqr:siphi:sithe:six0:siy0:tpqr:tpphi:tpthe:tpx0:tpy0:charge:quality:chisq:ndf:nhits:layers:nmaps:nintt:ntpc:nmms:ntpc1:ntpc11:ntpc2:ntpc3:nlmaps:nlintt:nltpc:nlmms:vertexID:vx:vy:vz:dca2d:dca2dsigma:dca3dxy:dca3dxysigma:dca3dz:dca3dzsigma:pcax:pcay:pcaz:nfromtruth:nwrong:ntrumaps:nwrongmaps:ntruintt:nwrongintt:ntrutpc:nwrongtpc:ntrumms:nwrongmms:ntrutpc1:nwrongtpc1:ntrutpc11:nwrongtpc11:ntrutpc2:nwrongtpc2:ntrutpc3:nwrongtpc3:layersfromtruth:npedge:nredge:nbig:novlp:merr:msize:nhittpcall:nhittpcin:nhittpcmid:nhittpcout:nclusall:nclustpc:nclusintt:nclusmaps:nclusmms:clus_e_cemc:clus_e_hcalin:clus_e_hcalout:clus_e_outer_cemc:clus_e_outer_hcalin:clus_e_outer_hcalout");
 
   for(Int_t ifile = istart; ifile < iend; ifile++)
   {
@@ -46,8 +46,8 @@ int main(int argc, const char *argv[])
       continue;
     }
 
-    const int nvar = 19;
-    const char *str_gtrack[nvar] = {"gparentPID", "gflavor", "px", "py", "pz", "vx", "vy", "vz", "pcax", "pcay", "pcaz", "dca3dxy", "dca3dz", "clus_e_cemc", "clus_e_hcalin", "clus_e_hcalout", "clus_e_outer_cemc", "clus_e_outer_hcalin", "clus_e_outer_hcalout"};
+    const int nvar = 127;
+    const char *str_gtrack[nvar] = {"gparentPID", "gflavor", "gntracks", "gnchghad", "gnhits", "gnmaps", "gnintt", "gnmms", "gnintt1", "gnintt2", "gnintt3", "gnintt4", "gnintt5", "gnintt6", "gnintt7", "gnintt8", "gntpc", "gnlmaps", "gnlintt", "gnltpc", "gnlmms", "gpx", "gpy", "gpz", "gpt", "geta", "gphi", "gvx", "gvy", "gvz", "gvt", "gfpx", "gfpy", "gfpz", "gfx", "gfy", "gfz", "px", "py", "pz", "pt", "eta", "phi", "deltapt", "deltaeta", "deltaphi", "siqr", "siphi", "sithe", "six0", "siy0", "tpqr", "tpphi", "tpthe", "tpx0", "tpy0", "charge", "quality", "chisq", "ndf", "nhits", "layers", "nmaps", "nintt", "ntpc", "nmms", "ntpc1", "ntpc11", "ntpc2", "ntpc3", "nlmaps", "nlintt", "nltpc", "nlmms", "vertexID", "vx", "vy", "vz", "dca2d", "dca2dsigma", "dca3dxy", "dca3dxysigma", "dca3dz", "dca3dzsigma", "pcax", "pcay", "pcaz", "nfromtruth", "nwrong", "ntrumaps", "nwrongmaps", "ntruintt", "nwrongintt", "ntrutpc", "nwrongtpc", "ntrumms", "nwrongmms", "ntrutpc1", "nwrongtpc1", "ntrutpc11", "nwrongtpc11", "ntrutpc2", "nwrongtpc2", "ntrutpc3", "nwrongtpc3", "layersfromtruth", "npedge", "nredge", "nbig", "novlp", "merr", "msize", "nhittpcall", "nhittpcin", "nhittpcmid", "nhittpcout", "nclusall", "nclustpc", "nclusintt", "nclusmaps", "nclusmms", "clus_e_cemc", "clus_e_hcalin", "clus_e_hcalout", "clus_e_outer_cemc", "clus_e_outer_hcalin", "clus_e_outer_hcalout"};
     Float_t var_gtrack[nvar];
     TNtuple *ntp_gtrack = static_cast<TNtuple*>(f_in->Get("ntp_gtrack"));
     if(!ntp_gtrack) continue;
@@ -58,7 +58,7 @@ int main(int argc, const char *argv[])
     {
       ntp_gtrack->GetEntry(ien);
 
-      if(!TMath::Finite(var_gtrack[13]) || abs(var_gtrack[1]) != 11)
+      if(!TMath::Finite(var_gtrack[nvar-6]) || abs(var_gtrack[1]) != 11)
         continue;
 
       for(int ivar = 0; ivar < nvar; ivar++)

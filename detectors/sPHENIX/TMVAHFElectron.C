@@ -174,7 +174,7 @@ int TMVAHFElectron( TString myMethodList = "" )
    // Read training and test data
    // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
    TFile *input(0);
-   TString fname = "results/hf-electron.root";
+   TString fname = "results/hf-electron-pp.root";
    if (!gSystem->AccessPathName( fname )) {
       input = TFile::Open( fname ); // check if file in local directory exists
    }
@@ -194,7 +194,7 @@ int TMVAHFElectron( TString myMethodList = "" )
    TTree *background     = ((TTree*)input->Get("ntp"))->CopyTree("signal==0");
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
-   TString outfileName( "results/TMVA-hf-electron.root" );
+   TString outfileName( "results/TMVA-hf-electron-pp.root" );
    TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
 
    // Create the factory object. Later you can choose the methods
@@ -211,7 +211,7 @@ int TMVAHFElectron( TString myMethodList = "" )
                                                //"!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification" );
                                                "!V:!Silent:Color:DrawProgressBar:AnalysisType=Classification" );
 
-   TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset-hf-electron");
+   TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset-hf-electron-pp");
    // If you wish to modify default settings
    // (please check "src/Config.h" to see all available global options)
    //
@@ -226,17 +226,140 @@ int TMVAHFElectron( TString myMethodList = "" )
    //dataloader->AddVariable( "var3",                "Variable 3", "units", 'F' );
    //dataloader->AddVariable( "var4",                "Variable 4", "units", 'F' );
 
+   //dataloader->AddVariable( "px", 'F' );
+   //dataloader->AddVariable( "py", 'F' );
+   //dataloader->AddVariable( "pz", 'F' );
+   //dataloader->AddVariable( "vx", 'F' );
+   //dataloader->AddVariable( "vy", 'F' );
+   //dataloader->AddVariable( "vz", 'F' );
+   //dataloader->AddVariable( "pcax", 'F' );
+   //dataloader->AddVariable( "pcay", 'F' );
+   //dataloader->AddVariable( "pcaz", 'F' );
+   //dataloader->AddVariable( "dca3dxy", 'F' );
+   //dataloader->AddVariable( "dca3dz", 'F' );
+   //dataloader->AddVariable( "clus_e_cemc", 'F' );
+   //dataloader->AddVariable( "clus_e_hcalin", 'F' );
+   //dataloader->AddVariable( "clus_e_hcalout", 'F' );
+
+   dataloader->AddVariable( "gntracks", 'F' );
+   dataloader->AddVariable( "gnchghad", 'F' );
+   dataloader->AddVariable( "gnhits", 'F' );
+   dataloader->AddVariable( "gnmaps", 'F' );
+   dataloader->AddVariable( "gnintt", 'F' );
+   dataloader->AddVariable( "gnmms", 'F' );
+   dataloader->AddVariable( "gnintt1", 'F' );
+   dataloader->AddVariable( "gnintt2", 'F' );
+   dataloader->AddVariable( "gnintt3", 'F' );
+   dataloader->AddVariable( "gnintt4", 'F' );
+   dataloader->AddVariable( "gnintt5", 'F' );
+   dataloader->AddVariable( "gnintt6", 'F' );
+   dataloader->AddVariable( "gnintt7", 'F' );
+   dataloader->AddVariable( "gnintt8", 'F' );
+   dataloader->AddVariable( "gntpc", 'F' );
+   dataloader->AddVariable( "gnlmaps", 'F' );
+   dataloader->AddVariable( "gnlintt", 'F' );
+   dataloader->AddVariable( "gnltpc", 'F' );
+   dataloader->AddVariable( "gnlmms", 'F' );
+   dataloader->AddVariable( "gpx", 'F' );
+   dataloader->AddVariable( "gpy", 'F' );
+   dataloader->AddVariable( "gpz", 'F' );
+   dataloader->AddVariable( "gpt", 'F' );
+   dataloader->AddVariable( "geta", 'F' );
+   dataloader->AddVariable( "gphi", 'F' );
+   dataloader->AddVariable( "gvx", 'F' );
+   dataloader->AddVariable( "gvy", 'F' );
+   dataloader->AddVariable( "gvz", 'F' );
+   dataloader->AddVariable( "gvt", 'F' );
+   dataloader->AddVariable( "gfpx", 'F' );
+   dataloader->AddVariable( "gfpy", 'F' );
+   dataloader->AddVariable( "gfpz", 'F' );
+   dataloader->AddVariable( "gfx", 'F' );
+   dataloader->AddVariable( "gfy", 'F' );
+   dataloader->AddVariable( "gfz", 'F' );
    dataloader->AddVariable( "px", 'F' );
    dataloader->AddVariable( "py", 'F' );
    dataloader->AddVariable( "pz", 'F' );
+   dataloader->AddVariable( "pt", 'F' );
+   dataloader->AddVariable( "eta", 'F' );
+   dataloader->AddVariable( "phi", 'F' );
+   dataloader->AddVariable( "deltapt", 'F' );
+   dataloader->AddVariable( "deltaeta", 'F' );
+   dataloader->AddVariable( "deltaphi", 'F' );
+   dataloader->AddVariable( "siqr", 'F' );
+   dataloader->AddVariable( "siphi", 'F' );
+   dataloader->AddVariable( "sithe", 'F' );
+   dataloader->AddVariable( "six0", 'F' );
+   dataloader->AddVariable( "siy0", 'F' );
+   dataloader->AddVariable( "tpqr", 'F' );
+   dataloader->AddVariable( "tpphi", 'F' );
+   dataloader->AddVariable( "tpthe", 'F' );
+   dataloader->AddVariable( "tpx0", 'F' );
+   dataloader->AddVariable( "tpy0", 'F' );
+   dataloader->AddVariable( "charge", 'F' );
+   dataloader->AddVariable( "quality", 'F' );
+   dataloader->AddVariable( "chisq", 'F' );
+   dataloader->AddVariable( "ndf", 'F' );
+   dataloader->AddVariable( "nhits", 'F' );
+   dataloader->AddVariable( "layers", 'F' );
+   dataloader->AddVariable( "nmaps", 'F' );
+   dataloader->AddVariable( "nintt", 'F' );
+   dataloader->AddVariable( "ntpc", 'F' );
+   dataloader->AddVariable( "nmms", 'F' );
+   dataloader->AddVariable( "ntpc1", 'F' );
+   dataloader->AddVariable( "ntpc11", 'F' );
+   dataloader->AddVariable( "ntpc2", 'F' );
+   dataloader->AddVariable( "ntpc3", 'F' );
+   dataloader->AddVariable( "nlmaps", 'F' );
+   dataloader->AddVariable( "nlintt", 'F' );
+   dataloader->AddVariable( "nltpc", 'F' );
+   dataloader->AddVariable( "nlmms", 'F' );
+   dataloader->AddVariable( "vertexID", 'F' );
    dataloader->AddVariable( "vx", 'F' );
    dataloader->AddVariable( "vy", 'F' );
    dataloader->AddVariable( "vz", 'F' );
+   dataloader->AddVariable( "dca2d", 'F' );
+   dataloader->AddVariable( "dca2dsigma", 'F' );
+   dataloader->AddVariable( "dca3dxy", 'F' );
+   dataloader->AddVariable( "dca3dxysigma", 'F' );
+   dataloader->AddVariable( "dca3dz", 'F' );
+   dataloader->AddVariable( "dca3dzsigma", 'F' );
    dataloader->AddVariable( "pcax", 'F' );
    dataloader->AddVariable( "pcay", 'F' );
    dataloader->AddVariable( "pcaz", 'F' );
-   dataloader->AddVariable( "dca3dxy", 'F' );
-   dataloader->AddVariable( "dca3dz", 'F' );
+   dataloader->AddVariable( "nfromtruth", 'F' );
+   dataloader->AddVariable( "nwrong", 'F' );
+   dataloader->AddVariable( "ntrumaps", 'F' );
+   dataloader->AddVariable( "nwrongmaps", 'F' );
+   dataloader->AddVariable( "ntruintt", 'F' );
+   dataloader->AddVariable( "nwrongintt", 'F' );
+   dataloader->AddVariable( "ntrutpc", 'F' );
+   dataloader->AddVariable( "nwrongtpc", 'F' );
+   dataloader->AddVariable( "ntrumms", 'F' );
+   dataloader->AddVariable( "nwrongmms", 'F' );
+   dataloader->AddVariable( "ntrutpc1", 'F' );
+   dataloader->AddVariable( "nwrongtpc1", 'F' );
+   dataloader->AddVariable( "ntrutpc11", 'F' );
+   dataloader->AddVariable( "nwrongtpc11", 'F' );
+   dataloader->AddVariable( "ntrutpc2", 'F' );
+   dataloader->AddVariable( "nwrongtpc2", 'F' );
+   dataloader->AddVariable( "ntrutpc3", 'F' );
+   dataloader->AddVariable( "nwrongtpc3", 'F' );
+   dataloader->AddVariable( "layersfromtruth", 'F' );
+   dataloader->AddVariable( "npedge", 'F' );
+   dataloader->AddVariable( "nredge", 'F' );
+   dataloader->AddVariable( "nbig", 'F' );
+   dataloader->AddVariable( "novlp", 'F' );
+   dataloader->AddVariable( "merr", 'F' );
+   dataloader->AddVariable( "msize", 'F' );
+   dataloader->AddVariable( "nhittpcall", 'F' );
+   dataloader->AddVariable( "nhittpcin", 'F' );
+   dataloader->AddVariable( "nhittpcmid", 'F' );
+   dataloader->AddVariable( "nhittpcout", 'F' );
+   dataloader->AddVariable( "nclusall", 'F' );
+   dataloader->AddVariable( "nclustpc", 'F' );
+   dataloader->AddVariable( "nclusintt", 'F' );
+   dataloader->AddVariable( "nclusmaps", 'F' );
+   dataloader->AddVariable( "nclusmms", 'F' );
    dataloader->AddVariable( "clus_e_cemc", 'F' );
    dataloader->AddVariable( "clus_e_hcalin", 'F' );
    dataloader->AddVariable( "clus_e_hcalout", 'F' );
@@ -321,8 +444,7 @@ int TMVAHFElectron( TString myMethodList = "" )
    //    dataloader->PrepareTrainingAndTestTree( mycut,
    //         "NSigTrain=3000:NBkgTrain=3000:NSigTest=3000:NBkgTest=3000:SplitMode=Random:!V" );
    dataloader->PrepareTrainingAndTestTree( mycuts, mycutb,
-                                        //"nTrain_Signal=1000:nTrain_Background=1000:SplitMode=Random:NormMode=NumEvents:!V" );
-                                        "nTest_Signal=1000:nTest_Background=1000:SplitMode=Random:NormMode=NumEvents:!V" );
+                                        "nTrain_Signal=6000:nTrain_Background=6000:nTest_Signal=1000:nTest_Background=1000:SplitMode=Random:NormMode=NumEvents:!V" );
 
    // ### Book MVA methods
    //

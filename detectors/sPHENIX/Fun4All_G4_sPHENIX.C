@@ -118,7 +118,10 @@ int Fun4All_G4_sPHENIX(
   //  Input::PYTHIA6 = true;
 
   Input::PYTHIA8 = true;
-  PYTHIA8::config_file = "phpythia8.cfg";
+  if (nJob%2 == 0)
+    PYTHIA8::config_file = "phpythia8-qcd.cfg";
+  else
+    PYTHIA8::config_file = "phpythia8-bbar.cfg";
 
   //  Input::GUN = true;
   //  Input::GUN_NUMBER = 3; // if you need 3 of them
