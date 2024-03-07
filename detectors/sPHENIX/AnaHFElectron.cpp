@@ -33,7 +33,7 @@ int main(int argc, const char *argv[])
   const char *ith = argv[5];
 
   auto f_out = new TFile(Form("%s-%s.root", output, ith), "RECREATE");
-  auto ntp_out = new TNtuple("ntp", "ntp of cluster energy", "signal:gflavor:gntracks:gnchghad:gnhits:gnmaps:gnintt:gnmms:gnintt1:gnintt2:gnintt3:gnintt4:gnintt5:gnintt6:gnintt7:gnintt8:gntpc:gnlmaps:gnlintt:gnltpc:gnlmms:gpx:gpy:gpz:gpt:geta:gphi:gvx:gvy:gvz:gvt:gfpx:gfpy:gfpz:gfx:gfy:gfz:px:py:pz:pt:eta:phi:deltapt:deltaeta:deltaphi:siqr:siphi:sithe:six0:siy0:tpqr:tpphi:tpthe:tpx0:tpy0:charge:quality:chisq:ndf:nhits:layers:nmaps:nintt:ntpc:nmms:ntpc1:ntpc11:ntpc2:ntpc3:nlmaps:nlintt:nltpc:nlmms:vertexID:vx:vy:vz:dca2d:dca2dsigma:dca3dxy:dca3dxysigma:dca3dz:dca3dzsigma:pcax:pcay:pcaz:nfromtruth:nwrong:ntrumaps:nwrongmaps:ntruintt:nwrongintt:ntrutpc:nwrongtpc:ntrumms:nwrongmms:ntrutpc1:nwrongtpc1:ntrutpc11:nwrongtpc11:ntrutpc2:nwrongtpc2:ntrutpc3:nwrongtpc3:layersfromtruth:npedge:nredge:nbig:novlp:merr:msize:nhittpcall:nhittpcin:nhittpcmid:nhittpcout:nclusall:nclustpc:nclusintt:nclusmaps:nclusmms:clus_e_cemc:clus_e_hcalin:clus_e_hcalout:clus_e_outer_cemc:clus_e_outer_hcalin:clus_e_outer_hcalout");
+  auto ntp_out = new TNtuple("ntp", "ntp of cluster energy", "signal:gparentPID:gntracks:gnchghad:gnhits:gnmaps:gnintt:gnmms:gnintt1:gnintt2:gnintt3:gnintt4:gnintt5:gnintt6:gnintt7:gnintt8:gntpc:gnlmaps:gnlintt:gnltpc:gnlmms:gpx:gpy:gpz:gpt:geta:gphi:gvx:gvy:gvz:gvt:gfpx:gfpy:gfpz:gfx:gfy:gfz:px:py:pz:pt:eta:phi:deltapt:deltaeta:deltaphi:siqr:siphi:sithe:six0:siy0:tpqr:tpphi:tpthe:tpx0:tpy0:charge:quality:chisq:ndf:nhits:layers:nmaps:nintt:ntpc:nmms:ntpc1:ntpc11:ntpc2:ntpc3:nlmaps:nlintt:nltpc:nlmms:vertexID:vx:vy:vz:dca2d:dca2dsigma:dca3dxy:dca3dxysigma:dca3dz:dca3dzsigma:pcax:pcay:pcaz:nfromtruth:nwrong:ntrumaps:nwrongmaps:ntruintt:nwrongintt:ntrutpc:nwrongtpc:ntrumms:nwrongmms:ntrutpc1:nwrongtpc1:ntrutpc11:nwrongtpc11:ntrutpc2:nwrongtpc2:ntrutpc3:nwrongtpc3:layersfromtruth:npedge:nredge:nbig:novlp:merr:msize:nhittpcall:nhittpcin:nhittpcmid:nhittpcout:nclusall:nclustpc:nclusintt:nclusmaps:nclusmms:clus_e_cemc:clus_e_hcalin:clus_e_hcalout:clus_e_outer_cemc:clus_e_outer_hcalin:clus_e_outer_hcalout");
 
   for(Int_t ifile = istart; ifile < iend; ifile++)
   {
@@ -71,6 +71,7 @@ int main(int argc, const char *argv[])
         var_gtrack[0] = 1;
       else
         var_gtrack[0] = 0;
+      var_gtrack[1] = ppid;
 
       ntp_out->Fill(var_gtrack);
     } // ien

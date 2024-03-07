@@ -101,14 +101,14 @@ int Fun4All_G4_sPHENIX(
   // Further choose to embed newly simulated events to a previous simulation. Not compatible with `readhits = true`
   // In case embedding into a production output, please double check your G4Setup_sPHENIX.C and G4_*.C consistent with those in the production macro folder
   // E.g. /sphenix/sim//sim01/production/2016-07-21/single_particle/spacal2d/
-  Input::EMBED = false;
-  //INPUTEMBED::filename[0] = embed_input_file0;
-  //INPUTEMBED::filename[1] = embed_input_file1;
-  //INPUTEMBED::filename[2] = embed_input_file2;
+  Input::EMBED = true;
+  INPUTEMBED::filename[0] = embed_input_file0;
+  INPUTEMBED::filename[1] = embed_input_file1;
+  INPUTEMBED::filename[2] = embed_input_file2;
   // if you use a filelist
   //INPUTEMBED::listfile[0] = embed_input_file;
 
-  Input::SIMPLE = false;
+  // Input::SIMPLE = true;
   // Input::SIMPLE_NUMBER = 2; // if you need 2 of them
   // Input::SIMPLE_VERBOSITY = 1;
 
@@ -117,7 +117,7 @@ int Fun4All_G4_sPHENIX(
 
   //  Input::PYTHIA6 = true;
 
-  Input::PYTHIA8 = true;
+  // Input::PYTHIA8 = true;
   if (nJob%2 == 0)
     PYTHIA8::config_file = "phpythia8-qcd.cfg";
   else
@@ -141,14 +141,15 @@ int Fun4All_G4_sPHENIX(
   //Input::UPSILON_VERBOSITY = 0;
 
   //KFPARTICLE::OmegaInput = true;
-  //KFParticleBaseCut::minTrackPT = 0.1; // GeV
-  //KFParticleBaseCut::maxTrackchi2nDoF = FLT_MAX;
-  //KFParticleBaseCut::minTrackIP = -1; // cm, IP = DCA of track with vertex
-  //KFParticleBaseCut::minTrackIPchi2 = -1; // IP = DCA of track with vertex
-  //KFParticleBaseCut::maxVertexchi2nDoF = FLT_MAX;
-  //KFParticleBaseCut::maxTrackTrackDCA = FLT_MAX; // cm
-  //KFParticleBaseCut::minDIRA = 0.5; // cosine of the angle
-  //KFParticleBaseCut::minMotherPT = 0.1; // GeV
+  KFPARTICLE::PhotonInput = true;
+  KFParticleBaseCut::minTrackPT = 0.2; // GeV
+  KFParticleBaseCut::maxTrackchi2nDoF = FLT_MAX;
+  KFParticleBaseCut::minTrackIPchi2 = -1; // IP = DCA of track with vertex
+  KFParticleBaseCut::maxVertexchi2nDoF = 2;
+  KFParticleBaseCut::maxTrackTrackDCA = 0.01; // cm
+  KFParticleBaseCut::minMotherPT = 0; // GeV
+  KFParticleBaseCut::minFDchi2 = 1; // minimum flight distance chi2
+  KFParticleBaseCut::minDIRA = 0.99; // cosine of the angle
 
   //  Input::HEPMC = true;
   INPUTHEPMC::filename = inputFile;
@@ -187,10 +188,11 @@ int Fun4All_G4_sPHENIX(
   // add the settings for other with [1], next with [2]...
   if (Input::SIMPLE)
   {
-    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi-", 50);
-    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi+", 50);
+    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi-", 50);
+    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi+", 50);
     //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("e-", 5);
     //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("e+", 5);
+    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(22, 100);  // gamma
     //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(511, 1);  // B0
     //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(3334, 1);  // Omega-
     if (Input::HEPMC || Input::EMBED)
@@ -204,11 +206,11 @@ int Fun4All_G4_sPHENIX(
                                                                                 PHG4SimpleEventGenerator::Gaus,
                                                                                 PHG4SimpleEventGenerator::Gaus);
       INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_mean(0., 0., 0.);
-      INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_width(0.01, 0.01, 5.);
+      INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_width(0.01, 0.01, 1.);
     }
     INPUTGENERATOR::SimpleEventGenerator[0]->set_eta_range(-1, 1);
     INPUTGENERATOR::SimpleEventGenerator[0]->set_phi_range(-M_PI, M_PI);
-    INPUTGENERATOR::SimpleEventGenerator[0]->set_pt_range(0.1, 20.);
+    INPUTGENERATOR::SimpleEventGenerator[0]->set_pt_range(2., 5.);
   }
   // Upsilons
   // if you run more than one of these Input::UPSILON_NUMBER > 1
@@ -217,7 +219,7 @@ int Fun4All_G4_sPHENIX(
   {
     INPUTGENERATOR::VectorMesonGenerator[0]->add_decay_particles("e", 0);
     INPUTGENERATOR::VectorMesonGenerator[0]->set_rapidity_range(-1, 1);
-    INPUTGENERATOR::VectorMesonGenerator[0]->set_pt_range(0., 10.);
+    INPUTGENERATOR::VectorMesonGenerator[0]->set_pt_range(1., 10.);
     // Y species - select only one, last one wins
     INPUTGENERATOR::VectorMesonGenerator[0]->set_upsilon_1s();
     if (Input::HEPMC || Input::EMBED)
@@ -339,31 +341,31 @@ int Fun4All_G4_sPHENIX(
 
   // central tracking
   Enable::MVTX = true;
-  Enable::MVTX_CELL = Enable::MVTX && true;
+  Enable::MVTX_CELL = Enable::MVTX && false;
   Enable::MVTX_CLUSTER = Enable::MVTX_CELL && true;
   Enable::MVTX_QA = Enable::MVTX_CLUSTER && Enable::QA && true;
 
   Enable::INTT = true;
 //  Enable::INTT_ABSORBER = true; // enables layerwise support structure readout
 //  Enable::INTT_SUPPORT = true; // enable global support structure readout
-  Enable::INTT_CELL = Enable::INTT && true;
+  Enable::INTT_CELL = Enable::INTT && false;
   Enable::INTT_CLUSTER = Enable::INTT_CELL && true;
   Enable::INTT_QA = Enable::INTT_CLUSTER && Enable::QA && true;
 
   Enable::TPC = true;
   Enable::TPC_ABSORBER = true;
-  Enable::TPC_CELL = Enable::TPC && true;
+  Enable::TPC_CELL = Enable::TPC && false;
   Enable::TPC_CLUSTER = Enable::TPC_CELL && true;
   Enable::TPC_QA = Enable::TPC_CLUSTER && Enable::QA && true;
 
   Enable::MICROMEGAS = true;
-  Enable::MICROMEGAS_CELL = Enable::MICROMEGAS && true;
+  Enable::MICROMEGAS_CELL = Enable::MICROMEGAS && false;
   Enable::MICROMEGAS_CLUSTER = Enable::MICROMEGAS_CELL && true;
   Enable::MICROMEGAS_QA = Enable::MICROMEGAS_CLUSTER && Enable::QA && true;
 
-  Enable::TRACKING_TRACK = (Enable::MICROMEGAS_CLUSTER && Enable::TPC_CLUSTER && Enable::INTT_CLUSTER && Enable::MVTX_CLUSTER) && true;
+  Enable::TRACKING_TRACK = true; // (Enable::MICROMEGAS_CLUSTER && Enable::TPC_CLUSTER && Enable::INTT_CLUSTER && Enable::MVTX_CLUSTER) && true;
   Enable::GLOBAL_RECO = (Enable::MBDFAKE || Enable::MBDRECO || Enable::TRACKING_TRACK) && true;
-  Enable::TRACKING_EVAL = Enable::TRACKING_TRACK && Enable::GLOBAL_RECO && true;
+  Enable::TRACKING_EVAL = Enable::TRACKING_TRACK && Enable::GLOBAL_RECO && false;
   Enable::TRACKING_QA = Enable::TRACKING_TRACK && Enable::QA && true;
 
   // only do track matching if TRACKINGTRACK is also used
@@ -382,7 +384,7 @@ int Fun4All_G4_sPHENIX(
 
   Enable::CEMC = true;
   Enable::CEMC_ABSORBER = true;
-  Enable::CEMC_CELL = Enable::CEMC && true;
+  Enable::CEMC_CELL = Enable::CEMC && false;
   Enable::CEMC_TOWER = Enable::CEMC_CELL && true;
   Enable::CEMC_CLUSTER = Enable::CEMC_TOWER && true;
   Enable::CEMC_EVAL = Enable::CEMC_G4Hit && Enable::CEMC_CLUSTER && false;
@@ -390,7 +392,7 @@ int Fun4All_G4_sPHENIX(
 
   Enable::HCALIN = true;
   Enable::HCALIN_ABSORBER = true;
-  Enable::HCALIN_CELL = Enable::HCALIN && true;
+  Enable::HCALIN_CELL = Enable::HCALIN && false;
   Enable::HCALIN_TOWER = Enable::HCALIN_CELL && true;
   Enable::HCALIN_CLUSTER = Enable::HCALIN_TOWER && true;
   Enable::HCALIN_EVAL = Enable::HCALIN_G4Hit && Enable::HCALIN_CLUSTER && false;
@@ -401,7 +403,7 @@ int Fun4All_G4_sPHENIX(
 
   Enable::HCALOUT = true;
   Enable::HCALOUT_ABSORBER = true;
-  Enable::HCALOUT_CELL = Enable::HCALOUT && true;
+  Enable::HCALOUT_CELL = Enable::HCALOUT && false;
   Enable::HCALOUT_TOWER = Enable::HCALOUT_CELL && true;
   Enable::HCALOUT_CLUSTER = Enable::HCALOUT_TOWER && true;
   Enable::HCALOUT_EVAL = Enable::HCALOUT_G4Hit && Enable::HCALOUT_CLUSTER && false;
@@ -425,10 +427,11 @@ int Fun4All_G4_sPHENIX(
 
  //Enable::GLOBAL_FASTSIM = true;
 
-  //Enable::KFPARTICLE = true;
-  //Enable::KFPARTICLE_VERBOSITY = 0;
-  //Enable::KFPARTICLE_TRUTH_MATCH = false;
-  //Enable::KFPARTICLE_SAVE_NTUPLE = true;
+  Enable::KFPARTICLE = true;
+  Enable::KFPARTICLE_VERBOSITY = 0;
+  Enable::KFPARTICLE_TRUTH_MATCH = false;
+  Enable::KFPARTICLE_SAVE_NTUPLE = true;
+  Enable::KFPARTICLE_APPEND_TO_DST = false;
 
   Enable::CALOTRIGGER = Enable::CEMC_TOWER && Enable::HCALIN_TOWER && Enable::HCALOUT_TOWER && false;
 
@@ -667,6 +670,7 @@ int Fun4All_G4_sPHENIX(
   if (Enable::KFPARTICLE && Input::UPSILON) KFParticle_Upsilon_Reco();
   if (Enable::KFPARTICLE && Input::DZERO) KFParticle_D0_Reco();
   if (Enable::KFPARTICLE && KFPARTICLE::OmegaInput) KFParticle_Omega_Reco(DstOut::OutputDir, nJob);
+  if (Enable::KFPARTICLE && KFPARTICLE::PhotonInput) KFParticle_Photon_Reco(DstOut::OutputDir, nJob);
 
   //----------------------
   // Standard QAs

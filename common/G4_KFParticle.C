@@ -58,18 +58,25 @@ namespace KFPARTICLE
   std::pair<float, float> OmegaMassRange(1., 2.5);
   std::pair<float, float> Lambda0MassRange(0.5, 2.);
   bool OmegaTrigger = false;
+
+  bool PhotonInput = false;
+  bool runPhotonReco = false;
+  std::string PhotonName = "gamma";
+  std::string PhotonDecayDescriptor = PhotonName + " -> e^+ e^-";
+  std::pair<float, float> PhotonMassRange(0, 0.5);
+  bool PhotonTrigger = false;
 } //namesppace KFPARTICLE
 
 namespace KFParticleBaseCut
 {
   float minTrackPT = 0.5; // GeV
   float maxTrackchi2nDoF = 2;
-  float minTrackIP = 0.01; // cm, IP = DCA of track with vertex
   float minTrackIPchi2 = 15; // IP = DCA of track with vertex
   float maxVertexchi2nDoF = 2;
   float maxTrackTrackDCA = 0.05; // cm
-  float minDIRA = 0.9; // cosine of the angle
   float minMotherPT = 0; // GeV
+  float minFDchi2 = -1; // minimum flight distance chi2
+  float minDIRA = 0.9; // cosine of the angle
 }  // namespace KFParticleBaseCut
 
 void KFParticle_Upsilon_Reco()
@@ -202,25 +209,24 @@ void KFParticle_Omega_Reco(const string &outdir, const int index)
   kfparticle->getDetectorInfo(Enable::KFPARTICLE_DETECTOR_INFO);
 
   kfparticle->setMinimumTrackPT(KFParticleBaseCut::minTrackPT);
-  kfparticle->setMinimumTrackIP(KFParticleBaseCut::minTrackIP);
   kfparticle->setMinimumTrackIPchi2(KFParticleBaseCut::minTrackIPchi2);
   kfparticle->setMaximumTrackchi2nDOF(KFParticleBaseCut::maxTrackchi2nDoF);
 
   kfparticle->setMaximumVertexchi2nDOF(KFParticleBaseCut::maxVertexchi2nDoF);
   kfparticle->setMaximumDaughterDCA(KFParticleBaseCut::maxTrackTrackDCA);
-  kfparticle->setMinDIRA(KFParticleBaseCut::minDIRA);
 
   kfparticle->setMinimumMass(KFPARTICLE::OmegaMassRange.first);
   kfparticle->setMaximumMass(KFPARTICLE::OmegaMassRange.second);
   kfparticle->setMotherPT(KFParticleBaseCut::minMotherPT);
+  kfparticle->setFlightDistancechi2(KFParticleBaseCut::minFDchi2);
+  kfparticle->setMinDIRA(KFParticleBaseCut::minDIRA);
   kfparticle->constrainToPrimaryVertex(true);
 
   kfparticle->setIntermediateMassRange(KFPARTICLE::vff{KFPARTICLE::Lambda0MassRange});
   kfparticle->setIntermediateMinPT(KFPARTICLE::vf{KFParticleBaseCut::minTrackPT});
-  kfparticle->setIntermediateIPRange(KFPARTICLE::vff{std::make_pair(KFParticleBaseCut::minTrackIP, FLT_MAX)});
   kfparticle->setIntermediateIPchi2Range(KFPARTICLE::vff{std::make_pair(KFParticleBaseCut::minTrackIPchi2, FLT_MAX)});
+  kfparticle->setIntermediateMinFDchi2(KFPARTICLE::vf{KFParticleBaseCut::minFDchi2});
   kfparticle->setIntermediateMinDIRA(KFPARTICLE::vf{KFParticleBaseCut::minDIRA});
-  kfparticle->setIntermediateMinFDchi2(KFPARTICLE::vf{-1});
 
   kfparticle->setContainerName(KFPARTICLE::OmegaName);
   kfparticle->setOutputName(outdir + "/KFParticleOutput_" + KFPARTICLE::OmegaName + "_reconstruction-" + std::to_string(index) + ".root");
@@ -228,6 +234,46 @@ void KFParticle_Omega_Reco(const string &outdir, const int index)
   se->registerSubsystem(kfparticle);
 
   KFPARTICLE::runOmegaReco = true;
+
+  return;
+}
+
+
+void KFParticle_Photon_Reco(const string &outdir, const int index)
+{
+  int verbosity = std::max(Enable::VERBOSITY, Enable::KFPARTICLE_VERBOSITY);
+
+  Fun4AllServer *se = Fun4AllServer::instance();
+
+  KFParticle_sPHENIX *kfparticle = new KFParticle_sPHENIX("KFParticle_" + KFPARTICLE::PhotonName + "_Reco");
+  kfparticle->Verbosity(verbosity);
+  kfparticle->setDecayDescriptor(KFPARTICLE::PhotonDecayDescriptor);
+
+  kfparticle->saveDST(Enable::KFPARTICLE_APPEND_TO_DST);
+  kfparticle->saveOutput(Enable::KFPARTICLE_SAVE_NTUPLE);
+  kfparticle->doTruthMatching(Enable::KFPARTICLE_TRUTH_MATCH);
+  kfparticle->getDetectorInfo(Enable::KFPARTICLE_DETECTOR_INFO);
+
+  kfparticle->setMinimumTrackPT(KFParticleBaseCut::minTrackPT);
+  kfparticle->setMinimumTrackIPchi2(KFParticleBaseCut::minTrackIPchi2);
+  kfparticle->setMaximumTrackchi2nDOF(KFParticleBaseCut::maxTrackchi2nDoF);
+
+  kfparticle->setMaximumVertexchi2nDOF(KFParticleBaseCut::maxVertexchi2nDoF);
+  kfparticle->setMaximumDaughterDCA(KFParticleBaseCut::maxTrackTrackDCA);
+
+  kfparticle->setMinimumMass(KFPARTICLE::PhotonMassRange.first);
+  kfparticle->setMaximumMass(KFPARTICLE::PhotonMassRange.second);
+  kfparticle->setMotherPT(KFParticleBaseCut::minMotherPT);
+  kfparticle->setFlightDistancechi2(KFParticleBaseCut::minFDchi2);
+  kfparticle->setMinDIRA(KFParticleBaseCut::minDIRA);
+  kfparticle->constrainToPrimaryVertex(true);
+
+  kfparticle->setContainerName(KFPARTICLE::PhotonName);
+  kfparticle->setOutputName(outdir + "/KFParticleOutput_" + KFPARTICLE::PhotonName + "_reconstruction-" + std::to_string(index) + ".root");
+
+  se->registerSubsystem(kfparticle);
+
+  KFPARTICLE::runPhotonReco = true;
 
   return;
 }
@@ -308,6 +354,24 @@ void KFParticle_QA()
                                                                      KFPARTICLE::OmegaMassRange.first,
                                                                      KFPARTICLE::OmegaMassRange.second);
     se->registerSubsystem(OmegaQA);
+  }
+
+  if (KFPARTICLE::runPhotonReco)
+  {
+    DecayFinder *PhotonFinder = new DecayFinder("DecayFinder_" + KFPARTICLE::PhotonName);
+    PhotonFinder->Verbosity(verbosity);
+    PhotonFinder->setDecayDescriptor(KFPARTICLE::PhotonDecayDescriptor);
+    PhotonFinder->triggerOnDecay(KFPARTICLE::PhotonTrigger);
+    PhotonFinder->saveDST(true);
+    PhotonFinder->allowPi0(true);
+    PhotonFinder->allowPhotons(true);
+    se->registerSubsystem(PhotonFinder);
+
+    QAG4SimulationKFParticle *PhotonQA = new QAG4SimulationKFParticle("QA_" + KFPARTICLE::PhotonName,
+                                                                       KFPARTICLE::PhotonName,
+                                                                       KFPARTICLE::PhotonMassRange.first,
+                                                                       KFPARTICLE::PhotonMassRange.second);
+    se->registerSubsystem(PhotonQA);
   }
 
   return;
