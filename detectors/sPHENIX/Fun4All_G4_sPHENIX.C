@@ -145,11 +145,11 @@ int Fun4All_G4_sPHENIX(
   KFParticleBaseCut::minTrackPT = 0.2; // GeV
   KFParticleBaseCut::maxTrackchi2nDoF = FLT_MAX;
   KFParticleBaseCut::minTrackIPchi2 = -1; // IP = DCA of track with vertex
-  KFParticleBaseCut::maxVertexchi2nDoF = 2;
-  KFParticleBaseCut::maxTrackTrackDCA = 0.01; // cm
+  KFParticleBaseCut::maxVertexchi2nDoF = FLT_MAX;
+  KFParticleBaseCut::maxTrackTrackDCA = 1; // cm
   KFParticleBaseCut::minMotherPT = 0; // GeV
-  KFParticleBaseCut::minFDchi2 = 1; // minimum flight distance chi2
-  KFParticleBaseCut::minDIRA = 0.99; // cosine of the angle
+  KFParticleBaseCut::minFDchi2 = -1; // minimum flight distance chi2
+  KFParticleBaseCut::minDIRA = 0.9; // cosine of the angle
 
   //  Input::HEPMC = true;
   INPUTHEPMC::filename = inputFile;
