@@ -3,7 +3,7 @@
 # Input parameters
 set proc = $1
 set nevents = $2
-set runno = 7
+set runno = 10
 @ index = $proc * $nevents / 360
 @ skip = $proc * $nevents % 360
 @ iend = $proc + 1

@@ -63,7 +63,7 @@ namespace KFPARTICLE
   bool runPhotonReco = false;
   std::string PhotonName = "gamma";
   std::string PhotonDecayDescriptor = PhotonName + " -> e^+ e^-";
-  std::pair<float, float> PhotonMassRange(0, 0.5);
+  std::pair<float, float> PhotonMassRange(0., 0.2);
   bool PhotonTrigger = false;
 } //namesppace KFPARTICLE
 

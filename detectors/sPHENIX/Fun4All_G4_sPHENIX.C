@@ -75,7 +75,6 @@ int Fun4All_G4_sPHENIX(
   //  rc->set_IntFlag("RANDOMSEED",PHRandomSeed());
   // or set it to a fixed value so you can debug your code
   //  rc->set_IntFlag("RANDOMSEED", 12345);
-  rc->set_IntFlag("RUNNUMBER", 0);
 
   // The default is no need to force decay anything and use the default file DECAY.DEC from the official EvtGen software
   // DECAY.DEC is located at: https://gitlab.cern.ch/evtgen/evtgen/-/blob/master/DECAY.DEC
@@ -102,13 +101,13 @@ int Fun4All_G4_sPHENIX(
   // In case embedding into a production output, please double check your G4Setup_sPHENIX.C and G4_*.C consistent with those in the production macro folder
   // E.g. /sphenix/sim//sim01/production/2016-07-21/single_particle/spacal2d/
   Input::EMBED = true;
-  INPUTEMBED::filename[0] = embed_input_file0;
-  INPUTEMBED::filename[1] = embed_input_file1;
-  INPUTEMBED::filename[2] = embed_input_file2;
+  //INPUTEMBED::filename[0] = embed_input_file0;
+  INPUTEMBED::filename[0] = embed_input_file1;
+  INPUTEMBED::filename[1] = embed_input_file2;
   // if you use a filelist
   //INPUTEMBED::listfile[0] = embed_input_file;
 
-  // Input::SIMPLE = true;
+  Input::SIMPLE = false;
   // Input::SIMPLE_NUMBER = 2; // if you need 2 of them
   // Input::SIMPLE_VERBOSITY = 1;
 
@@ -146,7 +145,7 @@ int Fun4All_G4_sPHENIX(
   KFParticleBaseCut::maxTrackchi2nDoF = FLT_MAX;
   KFParticleBaseCut::minTrackIPchi2 = -1; // IP = DCA of track with vertex
   KFParticleBaseCut::maxVertexchi2nDoF = FLT_MAX;
-  KFParticleBaseCut::maxTrackTrackDCA = 1; // cm
+  KFParticleBaseCut::maxTrackTrackDCA = 0.1; // cm
   KFParticleBaseCut::minMotherPT = 0; // GeV
   KFParticleBaseCut::minFDchi2 = -1; // minimum flight distance chi2
   KFParticleBaseCut::minDIRA = 0.9; // cosine of the angle
@@ -188,11 +187,11 @@ int Fun4All_G4_sPHENIX(
   // add the settings for other with [1], next with [2]...
   if (Input::SIMPLE)
   {
-    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi-", 50);
-    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi+", 50);
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi-", 5);
+    INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("pi+", 5);
     //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("e-", 5);
     //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles("e+", 5);
-    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(22, 100);  // gamma
+    //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(22, 5);  // gamma
     //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(511, 1);  // B0
     //INPUTGENERATOR::SimpleEventGenerator[0]->add_particles(3334, 1);  // Omega-
     if (Input::HEPMC || Input::EMBED)
@@ -206,11 +205,11 @@ int Fun4All_G4_sPHENIX(
                                                                                 PHG4SimpleEventGenerator::Gaus,
                                                                                 PHG4SimpleEventGenerator::Gaus);
       INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_mean(0., 0., 0.);
-      INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_width(0.01, 0.01, 1.);
+      INPUTGENERATOR::SimpleEventGenerator[0]->set_vertex_distribution_width(0.01, 0.01, 5.);
     }
     INPUTGENERATOR::SimpleEventGenerator[0]->set_eta_range(-1, 1);
     INPUTGENERATOR::SimpleEventGenerator[0]->set_phi_range(-M_PI, M_PI);
-    INPUTGENERATOR::SimpleEventGenerator[0]->set_pt_range(2., 5.);
+    INPUTGENERATOR::SimpleEventGenerator[0]->set_pt_range(0.1, 20.);
   }
   // Upsilons
   // if you run more than one of these Input::UPSILON_NUMBER > 1
@@ -219,7 +218,7 @@ int Fun4All_G4_sPHENIX(
   {
     INPUTGENERATOR::VectorMesonGenerator[0]->add_decay_particles("e", 0);
     INPUTGENERATOR::VectorMesonGenerator[0]->set_rapidity_range(-1, 1);
-    INPUTGENERATOR::VectorMesonGenerator[0]->set_pt_range(1., 10.);
+    INPUTGENERATOR::VectorMesonGenerator[0]->set_pt_range(0., 10.);
     // Y species - select only one, last one wins
     INPUTGENERATOR::VectorMesonGenerator[0]->set_upsilon_1s();
     if (Input::HEPMC || Input::EMBED)
@@ -233,8 +232,13 @@ int Fun4All_G4_sPHENIX(
   // add the settings for other with [1], next with [2]...
   if (Input::GUN)
   {
-    INPUTGENERATOR::Gun[0]->AddParticle("pi-", 0, 1, 0);
-    INPUTGENERATOR::Gun[0]->set_vtx(0, 0, 0);
+    const Float_t PI2 = 2*TMath::Pi();
+    for(Int_t i=0; i<Input::GUN_NUMBER; i++)
+    {
+      INPUTGENERATOR::Gun[i]->AddParticle("e-", 0.5*cos(i*PI2/Input::GUN_NUMBER), 0.5*sin(i*PI2/Input::GUN_NUMBER), 0.1*(2.*i/Input::GUN_NUMBER-1));
+      INPUTGENERATOR::Gun[i]->AddParticle("e+", 0.5*cos(i*PI2/Input::GUN_NUMBER), 0.5*sin(i*PI2/Input::GUN_NUMBER), 0.1*(2.*i/Input::GUN_NUMBER-1));
+      INPUTGENERATOR::Gun[i]->set_vtx(2*cos(i*PI2/Input::GUN_NUMBER), 2*sin(i*PI2/Input::GUN_NUMBER), 5*(2.*i/Input::GUN_NUMBER-1));
+    }
   }
 
   // pythia6
@@ -363,7 +367,7 @@ int Fun4All_G4_sPHENIX(
   Enable::MICROMEGAS_CLUSTER = Enable::MICROMEGAS_CELL && true;
   Enable::MICROMEGAS_QA = Enable::MICROMEGAS_CLUSTER && Enable::QA && true;
 
-  Enable::TRACKING_TRACK = true; // (Enable::MICROMEGAS_CLUSTER && Enable::TPC_CLUSTER && Enable::INTT_CLUSTER && Enable::MVTX_CLUSTER) && true;
+  Enable::TRACKING_TRACK = true; //(Enable::MICROMEGAS_CLUSTER && Enable::TPC_CLUSTER && Enable::INTT_CLUSTER && Enable::MVTX_CLUSTER) && true;
   Enable::GLOBAL_RECO = (Enable::MBDFAKE || Enable::MBDRECO || Enable::TRACKING_TRACK) && true;
   Enable::TRACKING_EVAL = Enable::TRACKING_TRACK && Enable::GLOBAL_RECO && false;
   Enable::TRACKING_QA = Enable::TRACKING_TRACK && Enable::QA && true;
