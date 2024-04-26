@@ -33,7 +33,7 @@ void Tracking_Eval(const std::string& outputfile)
     se->registerSubsystem(trackmatcher);
   }
 
-  if(true)
+  if(false)
   {
     auto trackEvaluation = new TrackEvaluation;
     trackEvaluation->set_flags(TrackEvaluation::EvalTracks);
@@ -58,10 +58,10 @@ void Tracking_Eval(const std::string& outputfile)
   eval->do_vertex_eval(false);
   eval->do_vtx_eval_light(true);
   eval->do_eval_light(true);
-  eval->do_track_eval(false);
+  eval->do_track_eval(true);
   eval->do_gtrack_eval(false);
-  eval->do_track_match(false);
-  eval->do_trackeval_eval(true);
+  eval->do_track_match(true);
+  eval->do_trackeval_eval(false);
   eval->set_use_initial_vertex(G4TRACKING::g4eval_use_initial_vertex);
   bool embed_scan = false;
   if(TRACKING::pp_mode) embed_scan = false;

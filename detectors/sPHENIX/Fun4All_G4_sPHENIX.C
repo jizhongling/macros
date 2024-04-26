@@ -50,9 +50,7 @@ R__LOAD_LIBRARY(libffamodules.so)
 int Fun4All_G4_sPHENIX(
     const int nJob = 0,
     const int nEvents = 1,
-    const string &embed_input_file0 = "DST_TRUTH_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000007-00000.root",
-    const string &embed_input_file1 = "DST_TRKR_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000007-00000.root",
-    const string &embed_input_file2 = "DST_CALO_G4HIT_sHijing_0_20fm_50kHz_bkg_0_20fm-0000000007-00000.root",
+    const string &embed_input_file = "dst_embed.list",
     const int skip = 0,
     const string &outdir = "/phenix/spin/phnxsp01/zji/data/sphenix/output",
     const string &inputFile = "https://www.phenix.bnl.gov/WWW/publish/phnxbld/sPHENIX/files/sPHENIX_G4Hits_sHijing_9-11fm_00000_00010.root",
@@ -101,11 +99,9 @@ int Fun4All_G4_sPHENIX(
   // In case embedding into a production output, please double check your G4Setup_sPHENIX.C and G4_*.C consistent with those in the production macro folder
   // E.g. /sphenix/sim//sim01/production/2016-07-21/single_particle/spacal2d/
   Input::EMBED = true;
-  //INPUTEMBED::filename[0] = embed_input_file0;
-  INPUTEMBED::filename[0] = embed_input_file1;
-  INPUTEMBED::filename[1] = embed_input_file2;
+  //INPUTEMBED::filename[0] = embed_input_file;
   // if you use a filelist
-  //INPUTEMBED::listfile[0] = embed_input_file;
+  INPUTEMBED::listfile[0] = embed_input_file;
 
   Input::SIMPLE = false;
   // Input::SIMPLE_NUMBER = 2; // if you need 2 of them
@@ -345,31 +341,31 @@ int Fun4All_G4_sPHENIX(
 
   // central tracking
   Enable::MVTX = true;
-  Enable::MVTX_CELL = Enable::MVTX && false;
+  Enable::MVTX_CELL = Enable::MVTX && true;
   Enable::MVTX_CLUSTER = Enable::MVTX_CELL && true;
   Enable::MVTX_QA = Enable::MVTX_CLUSTER && Enable::QA && true;
 
   Enable::INTT = true;
 //  Enable::INTT_ABSORBER = true; // enables layerwise support structure readout
 //  Enable::INTT_SUPPORT = true; // enable global support structure readout
-  Enable::INTT_CELL = Enable::INTT && false;
+  Enable::INTT_CELL = Enable::INTT && true;
   Enable::INTT_CLUSTER = Enable::INTT_CELL && true;
   Enable::INTT_QA = Enable::INTT_CLUSTER && Enable::QA && true;
 
   Enable::TPC = true;
   Enable::TPC_ABSORBER = true;
-  Enable::TPC_CELL = Enable::TPC && false;
+  Enable::TPC_CELL = Enable::TPC && true;
   Enable::TPC_CLUSTER = Enable::TPC_CELL && true;
   Enable::TPC_QA = Enable::TPC_CLUSTER && Enable::QA && true;
 
   Enable::MICROMEGAS = true;
-  Enable::MICROMEGAS_CELL = Enable::MICROMEGAS && false;
+  Enable::MICROMEGAS_CELL = Enable::MICROMEGAS && true;
   Enable::MICROMEGAS_CLUSTER = Enable::MICROMEGAS_CELL && true;
   Enable::MICROMEGAS_QA = Enable::MICROMEGAS_CLUSTER && Enable::QA && true;
 
-  Enable::TRACKING_TRACK = true; //(Enable::MICROMEGAS_CLUSTER && Enable::TPC_CLUSTER && Enable::INTT_CLUSTER && Enable::MVTX_CLUSTER) && true;
+  Enable::TRACKING_TRACK = (Enable::MICROMEGAS_CLUSTER && Enable::TPC_CLUSTER && Enable::INTT_CLUSTER && Enable::MVTX_CLUSTER) && true;
   Enable::GLOBAL_RECO = (Enable::MBDFAKE || Enable::MBDRECO || Enable::TRACKING_TRACK) && true;
-  Enable::TRACKING_EVAL = Enable::TRACKING_TRACK && Enable::GLOBAL_RECO && false;
+  Enable::TRACKING_EVAL = Enable::TRACKING_TRACK && Enable::GLOBAL_RECO && true;
   Enable::TRACKING_QA = Enable::TRACKING_TRACK && Enable::QA && true;
 
   // only do track matching if TRACKINGTRACK is also used
@@ -399,7 +395,7 @@ int Fun4All_G4_sPHENIX(
 
   Enable::CEMC = true;
   Enable::CEMC_ABSORBER = true;
-  Enable::CEMC_CELL = Enable::CEMC && false;
+  Enable::CEMC_CELL = Enable::CEMC && true;
   Enable::CEMC_TOWER = Enable::CEMC_CELL && true;
   Enable::CEMC_CLUSTER = Enable::CEMC_TOWER && true;
   Enable::CEMC_EVAL = Enable::CEMC_G4Hit && Enable::CEMC_CLUSTER && false;
@@ -407,7 +403,7 @@ int Fun4All_G4_sPHENIX(
 
   Enable::HCALIN = true;
   Enable::HCALIN_ABSORBER = true;
-  Enable::HCALIN_CELL = Enable::HCALIN && false;
+  Enable::HCALIN_CELL = Enable::HCALIN && true;
   Enable::HCALIN_TOWER = Enable::HCALIN_CELL && true;
   Enable::HCALIN_CLUSTER = Enable::HCALIN_TOWER && true;
   Enable::HCALIN_EVAL = Enable::HCALIN_G4Hit && Enable::HCALIN_CLUSTER && false;
@@ -418,7 +414,7 @@ int Fun4All_G4_sPHENIX(
 
   Enable::HCALOUT = true;
   Enable::HCALOUT_ABSORBER = true;
-  Enable::HCALOUT_CELL = Enable::HCALOUT && false;
+  Enable::HCALOUT_CELL = Enable::HCALOUT && true;
   Enable::HCALOUT_TOWER = Enable::HCALOUT_CELL && true;
   Enable::HCALOUT_CLUSTER = Enable::HCALOUT_TOWER && true;
   Enable::HCALOUT_EVAL = Enable::HCALOUT_G4Hit && Enable::HCALOUT_CLUSTER && false;
